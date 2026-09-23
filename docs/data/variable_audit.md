@@ -37,7 +37,7 @@ Files present in `data/raw/sas/2024/`: Season A and B production, screening, agr
 | interview_date | s5q12 | Q5.12 Date of interview | high |
 | weight | plot_weight | plot_weight | high |
 
-Open question (unresolved): s2q21 ("total quantity of harvest for this season") vs s2q22 ("for this crop this season") on a pure-stand plot should be equal; confirm with a cross-tab before using either as the yield numerator.
+**Resolved 2026-09-23** (was open in this section, checked before harmonize implementation): s2q21 ("total quantity of harvest for this season") and s2q22 ("total quantity produced/to be produced by this crop this season") are **not equivalent on pure-stand plots**. Cross-tab on 2024 Season A pure-stand plots (n=4,869 with both non-null): only 36.6% exactly equal, median relative difference 33%, and a heavy right tail (max diff 257,989,208 kg — data entry outlier). The s2q22/s2q21 ratio is systematically >1 (median 1.5x, mean 12.5x, driven by extreme outliers), consistent with s2q22's wording ("produced/**to be** produced") capturing projected or expected total production rather than harvest actually completed. Same pattern confirmed in 2023 and 2025 (33-34% exact match, similar tail). **Decision: canonical `harvest_kg` sources from s2q21 in every year, not s2q22.** s2q21 is also present in all 7 years (2019-2025), while s2q22 as a distinct crop-level column only exists 2023-2025. See `docs/decisions.md`.
 
 Districts present: 30 of 30 in both seasons. Weight (`plot_weight`) summary: Season A min 1.0, max 42,109.3, sum 35,243,844.1 (n=39,330 rows); Season B min 1.0, max 20,947.2, sum 30,534,218.0 (n=35,584 rows). Farmer type is small-scale (individual or cooperative) for 96% of rows in both seasons.
 
