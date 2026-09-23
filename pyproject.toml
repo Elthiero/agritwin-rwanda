@@ -21,3 +21,8 @@ select = ["E", "F", "I", "B", "UP", "SIM", "PD"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "api/tests"]
+
+[[tool.mypy.overrides]]
+# scikit-learn ships no inline type stubs or py.typed marker.
+module = "sklearn.*"
+ignore_missing_imports = true

@@ -49,8 +49,9 @@ yield_qc:
 
 attainable:
   percentile: 90
-  zone_method: aez      # aez if an agro-ecological zone layer is available, else kmeans
+  zone_method: kmeans   # no AEZ layer configured anywhere in this repo; see docs/decisions.md 2026-09-23
   kmeans_k: 5
+  min_segments: 10      # same floor as survey.min_segments; below this, attainable yield is "suppressed"
 
 drivers:
   target: log_yield
