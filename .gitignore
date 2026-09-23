@@ -42,3 +42,7 @@ web/dist/
 .DS_Store
 site/
 mlruns/
+
+
+# some files
+moving_nisr_files.py
