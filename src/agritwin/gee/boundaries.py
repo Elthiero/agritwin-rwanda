@@ -27,20 +27,21 @@ logger = loguru.logger
 def parse_gaul_features(fc_geojson: dict) -> gpd.GeoDataFrame:
     """Turn a GAUL FeatureCollection GeoJSON dict into a district table.
 
-    fc_geojson is the shape returned by ee.FeatureCollection.getInfo():
-    {"type": "FeatureCollection", "features": [{"properties": {...}, "geometry": {...}}, ...]}
+    fc_geojson is the shape returned by ee.FeatureCollection.getInfo(), after
+    rwanda_districts_fc() has already renamed ADM2_NAME/ADM2_CODE to
+    district_name/gaul_district_code server-side.
 
     Returns a GeoDataFrame with one row per input feature (district_name,
     gaul_district_code, geometry). Row count is preserved; a feature missing
-    ADM2_NAME or ADM2_CODE raises rather than being silently dropped.
+    district_name or gaul_district_code raises rather than being silently dropped.
     """
     geojson_features = []
     for feature in fc_geojson["features"]:
         props = feature["properties"]
-        name = props.get("ADM2_NAME")
-        code = props.get("ADM2_CODE")
+        name = props.get("district_name")
+        code = props.get("gaul_district_code")
         if name is None or code is None:
-            raise ValueError(f"GAUL feature missing ADM2_NAME or ADM2_CODE: {props}")
+            raise ValueError(f"GAUL feature missing district_name or gaul_district_code: {props}")
         geojson_features.append(
             {
                 "type": "Feature",
@@ -61,8 +62,10 @@ def rwanda_districts_fc(project_id: str) -> ee.FeatureCollection:
 
     cfg = gee_dataset_config("gaul_districts")
     ee.Initialize(project=project_id)
-    return ee.FeatureCollection(cfg["id"]).filter(
-        ee.Filter.eq(cfg["filter_field"], cfg["filter_value"])
+    return (
+        ee.FeatureCollection(cfg["id"])
+        .filter(ee.Filter.eq(cfg["filter_field"], cfg["filter_value"]))
+        .select(["ADM2_NAME", "ADM2_CODE"], ["district_name", "gaul_district_code"])
     )
 
 
