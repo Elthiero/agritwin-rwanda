@@ -1,7 +1,7 @@
 # AgriTwin Rwanda: Master Build Guide
 
 > NISR 2026 Big Data Hackathon, Track 1 (Agricultural Productivity)
-> Team: Elthiero (Thierry Donambi) and teammate
+> Team: Ahourdet Donambi Thierry (thierrydonambi@gmail.com) and Ishimwe Aime Cesar (ishimweaimecesar5@gmail.com)
 > Prepared: 23 September 2026
 > Submission deadline: 30 October 2026, 23:59. Internal target: 28 October 2026.
 > This file is the single reference for the project: problem, data, methodology, architecture, execution plan, and a complete Claude Code project kit (CLAUDE.md files, skills, subagents, config, CI) ready to drop into a new repository.
@@ -344,7 +344,7 @@ Everything below is a complete, working starting point for the repository, writt
 **How to use this with Claude Code, in order:**
 
 1. `git init agritwin-rwanda && cd agritwin-rwanda`, then create every file below at its path.
-2. Fill in `<teammate name>` in `ORIGINALITY.md`, the repository URL in `README.md`, and your real Earth Engine project ID in `.env` (copy from `.env.example`).
+2. Fill in the team members in `ORIGINALITY.md`, the repository URL in `README.md`, and your real Earth Engine project ID in `.env` (copy from `.env.example`).
 3. Run `claude` in the repo root. Claude Code will read `CLAUDE.md` automatically. Run `/init` if you want it to also append its own repo notes, then review the diff.
 4. Run `make setup` (creates the venv, installs `requirements.txt` and `requirements-dev.txt`, installs the `agritwin` package in editable mode, and runs `npm ci`), then `source venv/bin/activate` and `python scripts/test_gee.py` to reconfirm Earth Engine works in this environment (already confirmed once on 23 Sep 2026; re-run after any new machine or venv).
 5. Start with `/pipeline-step ingest SAS production files for one year` and build up module by module, following the week-by-week plan in Section 8.
@@ -478,7 +478,7 @@ Every AI-assisted change was reviewed, run and tested by a team member before me
 
 Yield gap and early harvest estimator for Rwanda. Built for the NISR 2026 Big Data Hackathon, Track 1 (Agricultural Productivity).
 Submission deadline: 30 October 2026, 23:59. Internal target: 28 October 2026.
-Team of two: Elthiero (data engineering, API, frontend, deployment) and teammate (survey methodology, validation, Kinyarwanda, domain research).
+Team of two: Ahourdet Donambi Thierry (data engineering, API, frontend, deployment) and Ishimwe Aime Cesar (survey methodology, validation, Kinyarwanda, domain research).
 
 The full build guide lives in `docs/AgriTwin_Master_Build_Guide.md`. Read the relevant section before starting any new module.
 
@@ -653,7 +653,7 @@ docs:
 
 We declare that this submission to the NISR 2026 Big Data Hackathon is original work produced by our team for this competition, has not been submitted to any other competition or entity, and is not derived from either team member's other coursework, theses, or client projects. All third-party data, libraries and references are cited in `docs/AgriTwin_Master_Build_Guide.md` and in code comments where used. AI assistance is disclosed in `AI_DISCLOSURE.md`.
 
-Team members: Elthiero (Thierry Donambi), <teammate name>.
+Team members: Ahourdet Donambi Thierry (thierrydonambi@gmail.com), Ishimwe Aime Cesar (ishimweaimecesar5@gmail.com).
 ```
 
 #### `README.md`
@@ -690,7 +690,7 @@ docker compose up --build
 ```
 
 ## Team
-Elthiero (Thierry Donambi), data engineering, models, API, deployment. <Teammate>, survey methodology, validation, Kinyarwanda, domain research.
+Ahourdet Donambi Thierry, data engineering, models, API, deployment. Ishimwe Aime Cesar, survey methodology, validation, Kinyarwanda, domain research.
 ```
 
 #### `docker-compose.yml`

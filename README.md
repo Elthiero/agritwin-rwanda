@@ -70,7 +70,7 @@ Full source list, dataset IDs, and licensing notes are in [`docs/data/README.md`
 ### Get the code
 
 ```bash
-git clone https://github.com/<your-username>/agritwin-rwanda.git
+git clone https://github.com/Elthiero/agritwin-rwanda.git
 cd agritwin-rwanda
 ```
 
@@ -164,10 +164,10 @@ Per the NISR 2026 Big Data Hackathon rules, all intellectual property in this su
 
 ## Team
 
-- **Elthiero (Thierry Donambi)**: data engineering, modelling, API, deployment
-- **<Teammate name>**: survey methodology, validation, Kinyarwanda translation, domain research
+- **Ahourdet Donambi Thierry**: data engineering, modelling, API, deployment (thierrydonambi@gmail.com)
+- **Ishimwe Aime Cesar**: survey methodology, validation, Kinyarwanda translation, domain research (ishimweaimecesar5@gmail.com)
 
 ## Contact
 
-Questions about this project: `<your contact email>`
+Questions about this project: `thierrydonambi@gmail.com`
 Questions about the hackathon: Prosper Ayinebyona, prosper.ayinebyona@statistics.gov.rw
