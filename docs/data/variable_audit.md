@@ -107,10 +107,55 @@ Pure-stand plot counts (`n_main_crops == 1`) for MVP crops, by `s2q6` code:
 | Beans (bush + climbing) | 106, 107 | 1,063 | 1,407 |
 | Rice, not MVP | 102 | 241 | 249 |
 
+## 2020
+
+Source: NISR catalog record 99, both Season A and Season B production, practice, and fertilizers/pesticides files (`.dta` format). Structure is **very similar to 2024**: single production file (with plot_weight) plus separate practice and fertilizer files, all joined on plot level. All canonical variables present except interview_date and harvest_kg_crop.
+
+**Key structural changes from 2019:** 2020 returns to plot-level weighting (like 2024), no longer segment-level. Interview date is missing (not collected in 2020 or lost in the data distribution). Unlike 2024, no separate crop-specific harvest column; only plot-level total.
+
+| Canonical | Source column | File | Label | Confidence | Notes |
+|---|---|---|---|---|---|
+| segment_id | Segment_ID | production | 1.0 Segment identification | high | |
+| province_code | s1q1 | production | 1.1 Province | high | |
+| district_code | s1q2 | production | 1.2 District name & code | high | |
+| stratum | s1q3 | production | 1.3 Stratum | high | |
+| segment_no | s1q4 | production | 1.4 Segment | high | |
+| farmer_id | s1q6 | production | 1.6 Farmer ID | high | Returned in 2020 after missing from 2019 |
+| farmer_type | s1q7 | production | 1.7 Farmer type | high | |
+| plot_id | s2q1 | production | 2.1 Plot No | high | |
+| plot_area_sqm | s2q2 | production | 2.2 Plot area sqm | high | |
+| n_main_crops | s2q3 | production | 2.3 Number of main crops | high | |
+| crop_code_src | s2q4 | production | 2.4 Crop name (value-labeled) | high | Same code mappings as 2024 and 2019 |
+| sowing_date | s2q7 | production | 2.7 Sowing date | high | |
+| improved_seed | s2q9 | production | 2.9 Did you use improved seed | high | Yes/no flag, like 2024 |
+| harvest_kg_plot | s2q21 | production | 2.21 Total quantity of harvest for this season (Kg) | high | Plot-level total |
+| harvest_kg_crop | — | none | N/A | high | Not separate column; equals s2q21 for pure-stand plots by definition, same as 2019 |
+| qty_lost_kg | s2q38 | production | 2.38 On the total production of this crop what is the quantity lost | high | |
+| organic_fert | s3q3 | fertilizers | 3.3 Used organic fertilizer in this plot | high | |
+| inorganic_fert | s3q9 | fertilizers | 3.9 Used inorganic fertilizer in this plot | high | |
+| pesticide | s3q19 | fertilizers | 3.19 Used pesticide/fungicide in this plot | high | |
+| erosion_degree | s4q1 | practice | 4.1 Degree of erosion on this plot | high | |
+| anti_erosion | s4q3 | practice | 4.3 Anti-erosion activity on this plot | high | |
+| land_consolidation | s3q25 | practice | 3.25 Does this plot belong to consolidated site | high | New question in 2020 (not in 2019); direct binary flag |
+| mechanized | s4q8_1, s4q9_1, s4q10_1 | practice | 4.8.1 (oxen), 4.9.1 (tractor), 4.10.1 (other) | high | Three separate binary columns; must OR to single flag |
+| irrigated | s4q13 | practice | 4.13 Plot irrigated this season | high | |
+| interview_date | — | none | N/A | high | Not collected or not present in distributed data; no interview date column found in any 2020 file |
+| weight | Plot_weight | production, practice, fertilizers | Plot weight | high | **Plot-level** (not segment-level like 2019) — min 1.0, max 23,247.8, sum 26,058,302 (Season B) |
+
+Districts present: 30 of 30 in both seasons. Pure-stand plot counts (`n_main_crops == 1`):
+
+| Crop | Code(s) | Season A | Season B |
+|---|---|---|---|
+| Maize | 101 | 1,054 | 356 |
+| Sorghum | 103 | 179 | 1,225 |
+| Irish potato | 110 | 383 | 360 |
+| Beans (bush + climbing) | 106, 107 | 1,055 | 1,210 |
+| Rice, not MVP | 102 | 125 | 191 |
+
 ## 2025
 
 Not yet audited. Data dictionary lists 101 unlabeled variables (V1 to V100 plus one more) for the Season B production file. Run `/audit-sas 2025` after downloading the file.
 
-## 2020-2023
+## 2021-2023
 
 Not yet audited. Run `/audit-sas <year>` for each.
