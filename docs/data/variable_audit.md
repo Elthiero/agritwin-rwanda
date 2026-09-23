@@ -185,9 +185,9 @@ Source: NISR catalog record 102, both Season A and Season B production, practice
 | mechanized | s4q8_1, s4q9_1, s4q10_1 | practice | 4.8.1 (oxen), 4.9.1 (tractor), 4.10.1 (other) | high | Three separate; OR to binary |
 | irrigated | s4q13 | practice | 4.13 Plot irrigated this season | high | |
 | interview_date | — | none | N/A | high | Not collected in 2021 (s5q13 is COVID-19 impacts) |
-| weight | finalplot_weight | production | Plot weight | high | **Plot-level** — min 1.0, max 24,895.5 (Season B), sum 25,113,833 (Season B). Two weight columns; use finalplot_weight. |
+| weight | finalplot_weight | production | Plot weight | high | **Plot-level** (verified: 76.9% of segments show weight variation across plots) — min 1.0, max 24,895.5 (Season B), sum 25,113,833 (Season B). Two weight columns; use finalplot_weight. |
 
-Districts present: 30 of 30 in both seasons. Pure-stand plot counts (`n_main_crops == 1`):
+Districts present: 30 of 30 in both seasons. **Design structure: individually verified as plot-level (76.9% segment weight variation, consistent with 2020–2025 block).** Pure-stand plot counts (`n_main_crops == 1`):
 
 | Crop | Code(s) | Season A | Season B |
 |---|---|---|---|
@@ -233,9 +233,9 @@ Source: NISR catalog record 103, both Season A and Season B production, practice
 | mechanized | s4q10_1, s4q11_1, s4q12_1 | practice | 4.10.1 (oxen), 4.11.1 (tractor), 4.12.1 (other) | high | Three separate; OR to binary |
 | irrigated | s4q15 | practice | 4.15 Plot irrigated this season | high | |
 | interview_date | — | none | N/A | high | Not collected in 2022 |
-| weight | plot_weight | production | plot_weight | high | **Plot-level** — min 1.0, max 42,795.4 (Season A), sum 34,993,486 (Season A) |
+| weight | plot_weight | production | plot_weight | high | **Plot-level** (verified: 76.0% of segments show weight variation across plots) — min 1.0, max 42,795.4 (Season A), sum 34,993,486 (Season A) |
 
-Districts present: 30 of 30 in both seasons. Pure-stand plot counts (`n_main_crops == 1`):
+Districts present: 30 of 30 in both seasons. **Design structure: individually verified as plot-level (76.0% segment weight variation, consistent with 2020–2025 block).** Pure-stand plot counts (`n_main_crops == 1`):
 
 | Crop | Code(s) | Season A | Season B |
 |---|---|---|---|
@@ -278,9 +278,9 @@ No differences from 2022: land_consolidation remains at `s4q6` (2022 position), 
 | mechanized | s4q10_1, s4q11_1, s4q12_1 | practice | 4.10.1 (oxen), 4.11.1 (tractor), 4.12.1 (other) | high | Three separate; OR to binary |
 | irrigated | s4q15 | production | 4.15 Plot irrigated this season | high | |
 | interview_date | — | none | N/A | high | Not collected in 2023 |
-| weight | plot_weight | production | plot_weight | high | **Plot-level** — min 1.0, max 20,956.5 (Season A), sum 31,499,395 (Season A) |
+| weight | plot_weight | production | plot_weight | high | **Plot-level** (verified: 76.4% of segments show weight variation across plots) — min 1.0, max 20,956.5 (Season A), sum 31,499,395 (Season A) |
 
-Districts present: 30 of 30 in both seasons. Pure-stand plot counts (`n_main_crops == 1`):
+Districts present: 30 of 30 in both seasons. **Design structure: individually verified as plot-level (76.4% segment weight variation, consistent with 2020–2025 block).** Pure-stand plot counts (`n_main_crops == 1`):
 
 | Crop | Code(s) | Season A | Season B |
 |---|---|---|---|
