@@ -1,0 +1,53 @@
+AgriTwin Rwanda — NOTICE
+
+Submission for the NISR 2026 Big Data Hackathon, Track 1 (Agricultural Productivity).
+
+IP transfer
+-----------
+Per the NISR 2026 Big Data Hackathon rules, intellectual property in this submission
+(including all original code, documentation, models, and derived outputs produced by the
+team for this project) transfers to the National Institute of Statistics of Rwanda (NISR)
+upon submission, as required by the hackathon's terms of participation. This NOTICE exists
+to record that transfer alongside the project itself; it does not itself restate the full
+text of the hackathon rules, which govern.
+
+This repository does not (and, per `.gitignore` and `CLAUDE.md` golden rule 1, must never)
+contain raw or plot-level NISR microdata. Only aggregated, district-level outputs are
+committed. See `AI_DISCLOSURE.md` for AI-tool usage disclosure and `ORIGINALITY.md` for the
+team's declaration of original work.
+
+Third-party data sources and licenses
+--------------------------------------
+Full source records, catalog IDs, and access notes are maintained in
+`config/data_sources.yaml` (NISR microdata, Earth Engine datasets) and
+`docs/data-sources.md` (HDX boundaries). Summary:
+
+- **NISR Seasonal Agricultural Survey (SAS) 2019-2025 and Agriculture Household Survey
+  (AHS) 2024.** Source: National Institute of Statistics of Rwanda microdata catalog
+  (`https://www.microdata.statistics.gov.rw`). Subject to NISR's own microdata access and
+  use terms (login and, for some years, approval required to download). Not redistributed
+  in this repository in any raw or identifiable form; only aggregated, district-level
+  statistics derived from it appear in `data/public/`.
+
+- **MODIS NDVI/EVI** (`MODIS/061/MOD13Q1`), **Sentinel-2 SR** (`COPERNICUS/S2_SR_HARMONIZED`),
+  **CHIRPS daily rainfall** (`UCSB-CHG/CHIRPS/DAILY`), **ESA WorldCover** (`ESA/WorldCover/v200`),
+  **iSDAsoil** (`ISDASOIL/Africa/v1/*`), **SRTM elevation** (`USGS/SRTMGL1_003`). Accessed via
+  Google Earth Engine under Earth Engine's noncommercial/academic terms of use. See each
+  dataset's entry in Earth Engine's public data catalog (`developers.google.com/earth-engine/datasets`)
+  for its specific license; this project does not redistribute the raw imagery, only derived
+  district-level zonal statistics.
+
+- **Rwanda administrative boundaries (COD-AB), admin level 2.** Source: UN OCHA Common
+  Operational Datasets, `https://data.humdata.org/dataset/cod-ab-rwa`, originally sourced from
+  NISR and vetted by ITOS (USAID-funded). License: **Creative Commons Attribution for
+  Intergovernmental Organisations (CC BY-IGO)**. Downloaded 2026-09-23; see
+  `docs/data-sources.md` for the exact resource URL. A simplified derivative is committed at
+  `data/public/geo/districts_adm2.geojson`.
+
+- **FAO GAUL districts** (`FAO/GAUL/2015/level2`), accessed via Earth Engine, used as the
+  original boundary source for `data/external/gee/*.csv` (see `docs/decisions.md`
+  2026-09-23 for why both GAUL and HDX boundaries are retained side by side). Subject to
+  FAO GAUL's own terms; see the dataset's Earth Engine catalog entry.
+
+No LICENSE file for this project's own original code has been chosen yet; this NOTICE
+covers IP transfer and third-party data attribution only. See `docs/STATUS.md` for that gap.
