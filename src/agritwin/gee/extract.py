@@ -73,7 +73,13 @@ def fetch_ndvi_district_stats(
 def fetch_rainfall_district_stats(
     districts_fc: ee.FeatureCollection, start_date: str, end_date: str, scale_m: int
 ) -> dict:
-    """Total CHIRPS rainfall (mm) per district over [start_date, end_date)."""
+    """Total CHIRPS rainfall (mm) per district over [start_date, end_date).
+
+    The temporal sum (days -> season total) happens in .sum() below; the
+    spatial reduceRegions step must be Reducer.mean(), not sum(), or the
+    result scales with the number of pixels in the district instead of
+    representing rainfall depth.
+    """
     import ee
 
     cfg = gee_dataset_config("chirps_daily")
@@ -85,7 +91,7 @@ def fetch_rainfall_district_stats(
         .multiply(CHIRPS_SCALE)
     )
     return img.reduceRegions(
-        collection=districts_fc, reducer=ee.Reducer.sum(), scale=scale_m
+        collection=districts_fc, reducer=ee.Reducer.mean(), scale=scale_m
     ).getInfo()
 
 

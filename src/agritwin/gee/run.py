@@ -68,7 +68,7 @@ def run_ndvi_rainfall() -> None:
                 districts_fc, start_date, end_date, scale["rainfall"]
             )
             rain_df = parse_district_zonal_stats(
-                rain_fc, value_field="sum", value_col="rainfall_mm"
+                rain_fc, value_field="mean", value_col="rainfall_mm"
             )
             rain_df["year"], rain_df["season"] = year, season
             rainfall_rows.append(rain_df)

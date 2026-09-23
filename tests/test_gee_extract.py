@@ -1,8 +1,10 @@
 """Unit tests for zonal stats parsing. No network access, no real ee calls."""
 
+import inspect
+
 import pytest
 
-from agritwin.gee.extract import parse_district_zonal_stats
+from agritwin.gee.extract import fetch_rainfall_district_stats, parse_district_zonal_stats
 
 
 def _fc(features):
@@ -45,3 +47,16 @@ def test_raw_gaul_property_names_are_rejected():
     fc = _fc([{"properties": {"ADM2_NAME": "Kigali", "ADM2_CODE": 1, "mean": 0.62}}])
     with pytest.raises(KeyError, match="district_name"):
         parse_district_zonal_stats(fc, value_field="mean", value_col="ndvi")
+
+
+def test_rainfall_spatial_reducer_is_mean_not_sum():
+    """Regression test: the spatial reduceRegions() reducer must average pixels
+    (rainfall depth) not sum them. Summing scales the result with the number
+    of pixels covering the district, which once produced seasonal totals up
+    to ~43,000 mm for a country where a season's total is roughly 300-900 mm.
+    The temporal .sum() over days within the date range stays correct.
+    """
+    source = inspect.getsource(fetch_rainfall_district_stats)
+    reduce_call = source.split("reduceRegions", 1)[1]
+    assert "ee.Reducer.mean()" in reduce_call
+    assert "ee.Reducer.sum()" not in reduce_call
