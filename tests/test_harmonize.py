@@ -10,6 +10,7 @@ from agritwin.harmonize.core import (
     build_confidence_table,
     join_season_files,
     rename_to_canonical,
+    resolved_column,
     value_label_rows,
 )
 from tests.fixtures.synthetic_sas import (
@@ -118,6 +119,72 @@ def test_weight_level_segment_for_2019_style_year():
     # would give a different, wrong value if the join collided).
     seg2_row = df[df["segment_id"] == 2].iloc[0]
     assert seg2_row["weight"] == 999.0
+
+
+def test_2019_weight_resolves_to_practice_file_column():
+    # Documented exception in core.FILE_LOCATION_OVERRIDES: 2019 weight is segment-level
+    # and only exists in the practice file, unlike every other year (2020-2025) where it
+    # comes from production. resolved_column must reflect that exception explicitly,
+    # not just happen to produce the right value by coincidence.
+    col = resolved_column(2019, "weight", YEAR_MAP_2019_STYLE)
+    assert col == "practice__weight"
+
+    col_2024 = resolved_column(2024, "weight", YEAR_MAP)
+    assert col_2024 == "plot_weight"  # unqualified: sourced from production, not practice
+
+
+def test_2019_weight_values_come_from_practice_not_production():
+    # production_df() and practice_df() both define a "weight" column with different
+    # values on purpose (see tests/fixtures/synthetic_sas.py), specifically so a harmonize
+    # bug that silently preferred production's value would be caught here. Practice's
+    # weight is [50.0, 999.0] for segment 1 / segment 2; production's is [50.0, 50.0, None].
+    # If harmonize used production's value for segment 2, this would read None, not 999.0.
+    df = _harmonized(year=2019, year_map=YEAR_MAP_2019_STYLE)
+    seg1_rows = df[df["segment_id"] == 1]
+    seg2_row = df[df["segment_id"] == 2].iloc[0]
+    assert (seg1_rows["weight"] == 50.0).all()  # coincides with production's value here
+    assert seg2_row["weight"] == 999.0  # diverges from production's None -- proves the source
+    assert seg2_row["weight"] != 50.0  # production's segment-2 value, must not leak through
+
+
+def test_season_c_excluded_from_run_output_even_if_present_in_raw_input(monkeypatch):
+    # Season C (marshland/irrigated) is out of MVP scope per src/agritwin/CLAUDE.md domain
+    # definitions, even though raw SAS releases sometimes include a Season C file set.
+    # run() must only process the seasons listed in settings.scope.seasons, and must not
+    # be fooled into processing Season C just because the file registry or raw files
+    # happen to define one.
+    import agritwin.harmonize.run as run_module
+
+    fake_settings = {"scope": {"years": [2024], "seasons": ["A", "B"]}}
+    fake_file_registry = {
+        2024: {
+            "A": {"production": "prod_a.dta", "practice": "prac_a.dta", "fertilizer": "fert_a.dta"},
+            "B": {"production": "prod_b.dta", "practice": "prac_b.dta", "fertilizer": "fert_b.dta"},
+            "C": {"production": "prod_c.dta", "practice": "prac_c.dta", "fertilizer": "fert_c.dta"},
+        }
+    }
+    fake_variable_map = {2024: {"production": YEAR_MAP}}
+    fake_crops_cfg = {"source_codes": {2024: CROP_MAP}}
+
+    seasons_processed: list[str] = []
+
+    def fake_read_season_files(year, season, file_registry):
+        seasons_processed.append(season)
+        return season_files()
+
+    monkeypatch.setattr(run_module, "load_settings", lambda: fake_settings)
+    monkeypatch.setattr(run_module, "load_file_registry", lambda: fake_file_registry)
+    monkeypatch.setattr(run_module, "load_variable_map", lambda: fake_variable_map)
+    monkeypatch.setattr(run_module, "load_crops", lambda: fake_crops_cfg)
+    monkeypatch.setattr(run_module, "read_season_files", fake_read_season_files)
+    monkeypatch.setattr(run_module, "read_value_labels", lambda path, columns: {})
+    monkeypatch.setattr(pd.DataFrame, "to_parquet", lambda self, *a, **k: None)
+
+    result = run_module.run()
+
+    assert set(seasons_processed) == {"A", "B"}
+    assert "C" not in seasons_processed
+    assert set(result["season"].unique()) == {"A", "B"}
 
 
 def test_value_label_rows_preserves_year_specific_codes():
