@@ -23,6 +23,9 @@ gee_extraction:
     cropland: 20
     soil: 30
 
+harmonize:
+  row_loss_threshold_pct: 2.0   # max allowed row loss (production rows in vs out) per join before raising
+
 survey:
   weight_col: weight
   strata_col: stratum

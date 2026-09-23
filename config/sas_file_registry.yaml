@@ -1,0 +1,80 @@
+# Maps year -> season -> file role -> actual raw filename in data/raw/sas/{year}/.
+# Filenames are inconsistent across years (different naming conventions, casing,
+# spacing) so this registry is the single place that knows the real names.
+# Confirmed by directory listing during /audit-sas for each year. Do not guess;
+# re-run /audit-sas if a year's filenames change after a re-download.
+#
+# File roles:
+#   production: crop-level rows (multiple rows per plot for multi-crop plots)
+#   practice:   plot-level rows (erosion, land consolidation, mechanization, irrigation)
+#   fertilizer: plot-level rows (organic/inorganic fertilizer, pesticide)
+
+2019:
+  A:
+    production: "rwa-sas-seasonA_Crop production.sav"
+    practice: "rwa-sas-SeasonA_PartIV_Agricultural practice.sav"
+    fertilizer: "rwa-sas-SeasonA_PartIII_Fertilizers_Pesticides.sav"
+  B:
+    production: "rwa-sas-seasonB_Crop production.sav"
+    practice: "rwa-sas-SeasonB_PartIV_Agricultural practice.sav"
+    fertilizer: "rwa-sas-SeasonB_PartIII_Fertilizers_Pesticides.sav"
+
+2020:
+  A:
+    production: "rwa-sas-seasonA_Crop production.dta"
+    practice: "rwa-sas-SeasonA_PartIV_Agricultural practice.dta"
+    fertilizer: "rwa-sas-SeasonA_PartIII_Fertilizers_Pesticides.dta"
+  B:
+    production: "rwa-sas-seasonB_Crop production.dta"
+    practice: "rwa-sas-SeasonB_PartIV_Agricultural practice.dta"
+    fertilizer: "rwa-sas-SeasonB_PartIII_Fertilizers_Pesticides.dta"
+
+2021:
+  A:
+    production: "rwa-sas-seasonA_Crop production.dta"
+    practice: "rwa-sas-SeasonA_PartIV_Agricultural practice.dta"
+    fertilizer: "rwa-sas-SeasonA_PartIII_Fertilizers_Pesticides.dta"
+  B:
+    production: "rwa-sas-seasonB_Crop production.dta"
+    practice: "rwa-sas-SeasonB_PartIV_Agricultural practice.dta"
+    fertilizer: "rwa-sas-SeasonB_PartIII_Fertilizers_Pesticides.dta"
+
+2022:
+  A:
+    production: "rwa-sas-seasonA_Crop production.dta"
+    practice: "rwa-sas-SeasonA_PartIV_Agricultural practice.dta"
+    fertilizer: "rwa-sas-SeasonA_PartIII_Fertilizers_Pesticides.dta"
+  B:
+    production: "rwa-sas-seasonB_Crop production.dta"
+    practice: "rwa-sas-SeasonB_PartIV_Agricultural practice.dta"
+    fertilizer: "rwa-sas-SeasonB_PartIII_Fertilizers_Pesticides.dta"
+
+2023:
+  A:
+    production: "rwa-sas-seasonA_Crop production.dta"
+    practice: "rwa-sas-SeasonA_PartIV_Agricultural practice.dta"
+    fertilizer: "rwa-sas-SeasonA_PartIII_Fertilizers_Pesticides.dta"
+  B:
+    production: "rwa-sas-seasonB_Crop production.dta"
+    practice: "rwa-sas-SeasonB_PartIV_Agricultural practice.dta"
+    fertilizer: "rwa-sas-SeasonB_PartIII_Fertilizers_Pesticides.dta"
+
+2024:
+  A:
+    production: "Rwa_raw_SeasonA2024_Production.dta"
+    practice: "Rwa_raw_SeasonA2024_Agricultural_practice.dta"
+    fertilizer: "Rwa_raw_fertilizer_pesticideA2024.dta"
+  B:
+    production: "Rwa_raw_SeasonB2024_Production.dta"
+    practice: "Rwa_raw_SeasonB2024_Agricultural_practice.dta"
+    fertilizer: "Rwa_raw_fertilizer_pesticideB2024.dta"
+
+2025:
+  A:
+    production: "Rwa_raw_SeasonA2025_Production.dta"
+    practice: "Rwa_raw_SeasonA2025_Agricultural_practice.dta"
+    fertilizer: "Rwa_raw_fertilizer_pesticideA2025.dta"
+  B:
+    production: "Rwa_raw_SeasonB2025_Production.dta"
+    practice: "Rwa_raw_SeasonB2025_Agricultural_practice.dta"
+    fertilizer: "Rwa_raw_fertilizer_pesticideB2025.dta"

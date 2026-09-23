@@ -26,3 +26,18 @@ def load_data_sources() -> dict:
 def gee_dataset_config(name: str) -> dict:
     """Config for one entry under gee.datasets in config/data_sources.yaml."""
     return load_data_sources()["gee"]["datasets"][name]
+
+
+def load_variable_map() -> dict:
+    with open(CONFIG_DIR / "sas_variable_map.yaml") as f:
+        return yaml.safe_load(f)
+
+
+def load_file_registry() -> dict:
+    with open(CONFIG_DIR / "sas_file_registry.yaml") as f:
+        return yaml.safe_load(f)
+
+
+def load_crops() -> dict:
+    with open(CONFIG_DIR / "crops.yaml") as f:
+        return yaml.safe_load(f)
