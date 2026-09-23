@@ -334,3 +334,5 @@ Districts present: 30 of 30 in both seasons. Pure-stand plot counts (`n_main_cro
 | Irish potato | 110 | 384 | 536 |
 | Beans (bush + climbing) | 106, 107 | 1,320 | 2,280 |
 | Rice, not MVP | 102 | 199 | 197 |
+
+**Derived field (unverified):** `qty_lost_kg_itemized_sum` = sum(s2q41:s2q50) across all ten loss categories (stolen, insects, animals, stalks, harvesting, transport, storage, processing, packaging, sales). **Mutual exclusivity across categories has not been validated.** This field is documented for future reference only; not wired into config/sas_variable_map.yaml or any pipeline step. Before implementing, harmonize module should verify (1) whether the ten categories are truly mutually exclusive or can overlap, and (2) whether this sum equals s2q39 (total loss) in years where both are present (2024, 2023, 2022, etc.) to validate the mapping strategy.
