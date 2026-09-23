@@ -1,4 +1,4 @@
-.PHONY: setup ingest stage marts gee features train export check-public all api web test lint docs
+.PHONY: setup stage marts gee features train export check-public all api web test lint docs
 
 # Assumes an activated venv (python3 -m venv venv && source venv/bin/activate).
 PY = python -m
@@ -10,9 +10,6 @@ setup:
 	./venv/bin/pip install -e .
 	if [ -f web/package.json ]; then cd web && npm install; else echo "web/ not scaffolded yet, skipping (see web/CLAUDE.md, Week 2 task)"; fi
 	./venv/bin/pre-commit install
-
-ingest:
-	$(PY) agritwin.ingest.run
 
 stage:
 	$(PY) agritwin.harmonize.run
@@ -35,7 +32,7 @@ export:
 check-public:
 	python scripts/check_public.py
 
-all: ingest stage marts gee features train export check-public
+all: stage marts gee features train export check-public
 
 api:
 	uvicorn api.app.main:app --reload --port 8000
