@@ -115,5 +115,33 @@
     irrigated: s4q13             # from PartIV_Agricultural practice.dta
     interview_date: null         # not collected in 2021 (s5q13 is COVID-19 impacts, not interview date)
     weight: finalplot_weight     # two weight columns in 2021: plot_weight (generic label) and finalplot_weight (labeled "Plot weight"); use finalplot_weight
+2022:
+  production:
+    segment_id: Segment_ID
+    province_code: s1q1
+    district_code: s1q2
+    stratum: s1q3
+    segment_no: s1q4
+    farmer_id: s1q6
+    farmer_type: s1q7
+    plot_id: s2q1
+    plot_area_sqm: s2q2
+    n_main_crops: s2q3
+    crop_code_src: s2q4
+    sowing_date: s2q7
+    improved_seed: s2q9
+    harvest_kg_plot: s2q21
+    harvest_kg_crop: null        # no separate crop-specific harvest; equals s2q21 for pure-stand by definition
+    qty_lost_kg: s2q38
+    organic_fert: s3q3           # from PartIII_Fertilizers_Pesticides.dta
+    inorganic_fert: s3q9         # from PartIII_Fertilizers_Pesticides.dta
+    pesticide: s3q19             # from PartIII_Fertilizers_Pesticides.dta
+    erosion_degree: s4q1         # from PartIV_Agricultural practice.dta
+    anti_erosion: s4q3           # from PartIV_Agricultural practice.dta
+    land_consolidation: s4q6     # from PartIV_Agricultural practice.dta (moved from s3q25 in 2021)
+    mechanized: [s4q10_1, s4q11_1, s4q12_1]  # from PartIV_Agricultural practice.dta; must OR to binary
+    irrigated: s4q15             # from PartIV_Agricultural practice.dta
+    interview_date: null         # not collected in 2022
+    weight: plot_weight          # plot-level weight from production file
 2025:
   production: {}   # V1 to V100 unlabeled in the dictionary; map by position with /audit-sas
