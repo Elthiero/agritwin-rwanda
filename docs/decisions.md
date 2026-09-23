@@ -63,7 +63,58 @@ Record every methodological or architectural decision here. One entry per decisi
 - **Alternatives considered:** (1) Build `ingest/` now for symmetry with the original design. Rejected: no consumer needs interim Parquet, and the value-label capture problem it was meant to solve is already solved inside `harmonize/`. (2) Keep the Makefile `ingest` target as a no-op passthrough. Rejected: a no-op target that never runs anything is confusing scaffolding, not a real step.
 - **Reversible:** Yes. If a future raw format (e.g. very large AHS files) makes a cached typed-interim step worth it, `ingest/` can be reintroduced without touching `harmonize/`'s canonical output contract.
 
-### 2026-09-23: OPEN ITEM — district_code (SAS) to GAUL district (GEE mart) is unreconciled
+### 2026-09-23: CLOSED — district_code (SAS) to GAUL district (GEE mart) crosswalk built
+- **Status: closed.** Resolves the open item below.
+- **Decision:** Built `data/reference/district_crosswalk.csv` (30 rows: `nisr_district_code,
+  district_name, province, hdx_pcode, gaul_code`), sourced from HDX's COD-AB Rwanda admin2
+  boundaries (see `docs/data-sources.md` for the exact source URL, download date, and license).
+  Re-keyed all five existing `data/external/gee/*.csv` outputs (`ndvi_district_season`,
+  `rainfall_district_season`, `cropland_fraction_district`, `soil_district`,
+  `feat_district_season_joined`) with `nisr_district_code`, additively (no rows or existing
+  columns removed, only the new column added). Wired `src/agritwin/gee/` so future extraction
+  runs (`hdx_districts_fc()` in `boundaries.py`) use the HDX-derived FeatureCollection natively
+  keyed on `nisr_district_code`, instead of GAUL, confirmed working against live Earth Engine
+  (`fetch_cropland_fraction_district_stats` returned 30 correctly-keyed rows in this session).
+- **Reason the join turned out simpler than expected:** NISR's `district_code` value labels
+  (read directly from all 7 SAS years' raw `.dta`/`.sav` files, metadata-only) are **identical**
+  in code and spelling to HDX's `ADM2_PCODE` numeric suffix and `ADM2_EN` name, for all 30
+  districts, across 2019-2024 with zero discrepancy. The only spelling variant found anywhere:
+  2025's SAS district_code 11 is labeled "Nyarugenege" (a typo, extra "e") instead of
+  "Nyarugenge"; the crosswalk stores the correct spelling and this is the only reconciliation
+  needed. GAUL's `ADM2_CODE` (already used to key the existing GEE outputs) also matches all 30
+  HDX/NISR district names exactly by string equality, so `gaul_code` was added to the crosswalk
+  as a bridge rather than needing its own reconciliation pass.
+- **Why HDX and not a custom EE asset upload:** the task requested extraction "on the HDX polygons
+  (as an Earth Engine asset)". Rather than uploading the shapefile as a persisted EE table asset
+  (requires a GCS bucket intermediary and async ingestion, an ongoing asset-management dependency),
+  `hdx_districts_fc()` builds the `ee.FeatureCollection` client-side from the committed, simplified
+  GeoJSON (`data/public/geo/districts_adm2.geojson`, ~256 KB, well under the 5 MB threshold and the
+  FeatureCollection payload limit for 30 simplified polygons). This gives every property
+  (`nisr_district_code`, `district_name`, `province`, `hdx_pcode`) natively on every extraction
+  result with no separate asset to provision, refresh, or lose access to.
+- **Alternatives considered:** (1) Fuzzy name-matching between SAS and GAUL district names directly,
+  skipping HDX. Rejected before starting: GAUL names could differ in spelling or Kigali
+  sub-division from NISR's names (the original open item's stated risk), and turned out unnecessary
+  once HDX's independently-sourced P-codes gave an exact numeric match, but going through HDX
+  instead of GAUL directly still avoids relying on an unverified assumption that GAUL's own names
+  are stable. (2) Upload the HDX shapefile as a persisted EE table asset. Rejected: heavier
+  dependency (GCS, ingestion, quota) for no benefit over a client-side FeatureCollection at this
+  small scale (30 features).
+- **Reversible:** Yes. The crosswalk is additive; nothing that depended on `gaul_district_code`
+  was removed, so a decision to standardize fully on one boundary source later does not require
+  redoing this work.
+- **Impact on pipeline:** `src/agritwin/features/` can now join SAS-derived (`clean/`, `survey/`,
+  once built) district estimates to the GEE mart on `nisr_district_code` directly, no further
+  crosswalk needed. `src/agritwin/gee/run.py`'s `run_ndvi_rainfall`, `run_cropland`, `run_soil`
+  now build their region set from `hdx_districts_fc()`; `run_boundaries()` (which still writes
+  `data/external/boundaries/rwanda_districts.geojson`, served by the API's `/geo/districts`
+  endpoint) was left on GAUL, since switching the API's boundary source is a separate, unrequested
+  decision — `data/public/geo/districts_adm2.geojson` is available whenever that switch is made.
+  Historical NDVI/rainfall/soil/cropland values in the re-keyed CSVs were **not** re-extracted
+  against the new polygon source in this session (that is a real Earth Engine compute cost,
+  deliberately not spent without being asked); only the district key was added.
+
+### 2026-09-23 (superseded above): OPEN ITEM — district_code (SAS) to GAUL district (GEE mart) is unreconciled
 - **Status: open, blocking.** Not a decision yet, logged here so it is not lost as a "someday" item.
 - **Problem:** `stg_sas_plot_crop` (from `src/agritwin/harmonize/`) keys districts on NISR's numeric `district_code` (from s1q2, 30 values) and currently writes `district_name` as null. The already-built GEE feature mart (`data/external/gee/*.csv`, produced by `src/agritwin/gee/`) keys districts on `district_name` (string, e.g. "Bugesera") and `gaul_district_code` (FAO GAUL admin2 code, e.g. 21974). **No shared key exists between the two tables today.** This was already flagged as unresolved in `config/data_sources.yaml`'s `gaul_districts` entry ("ADM2_CODE is GAUL's own code, not the NISR survey district_code, and is not yet reconciled to it"), but that note undersold it as an ambient caveat rather than a build blocker. It is a blocker: per `CLAUDE.md` golden rule 4 ("No naive joins across surveys... SAS, AHS and satellite features meet only at district x season x year level"), the `features/` step (`feat_district_season`) cannot join SAS-derived survey estimates to GEE-derived satellite features without this crosswalk, and `export/` cannot label a map polygon with a SAS-derived yield-gap number without it either.
 - **Why this wasn't caught earlier:** The GEE mart was built and validated independently (district x season NDVI/rainfall, `gaul_districts` boundary fetch) before the SAS harmonize step existed, so the district-key mismatch had no consumer to surface it until now. `district_name` was left null in harmonize deliberately (see the 2026-09-23 harmonize implementation commit), which is correct as far as it goes, but a null column understates that this is a required, not optional, follow-up.
