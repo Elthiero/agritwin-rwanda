@@ -31,5 +31,33 @@
     irrigated: s4q15
     interview_date: s5q12
     weight: plot_weight
+2019:
+  production:
+    segment_id: Segment_ID
+    province_code: s1q1
+    district_code: s1q2
+    stratum: s1q3
+    segment_no: s1q4
+    farmer_id: null            # not present in 2019; use null for harmonization
+    farmer_type: s2q3_1
+    plot_id: s2q1
+    plot_area_sqm: s2q2        # labeled "Area m2" for Season A, "Plot size (ha)" for Season B; actual unit confirmed as sqm
+    n_main_crops: s2q5
+    crop_code_src: s2q6
+    sowing_date: s2q8
+    improved_seed: null        # no direct yes/no flag; only s2q10 (type of seeds) and s2q14_1/2 (improved qty)
+    harvest_kg_plot: s2q21     # total plot harvest in kg (contains all crops on plot)
+    harvest_kg_crop: null      # not separate column; equals s2q21 for pure-stand plots by definition
+    qty_lost_kg: s2q37         # lost after harvest
+    organic_fert: s3q1         # from PartIII_Fertilizers_Pesticides.sav
+    inorganic_fert: s3q5       # from PartIII_Fertilizers_Pesticides.sav
+    pesticide: s3q13           # from PartIII_Fertilizers_Pesticides.sav
+    erosion_degree: s4q1       # from PartIV_Agricultural practice.sav
+    anti_erosion: s4q2         # from PartIV_Agricultural practice.sav
+    land_consolidation: null   # not present in 2019
+    mechanized: [s4q10_1, s4q11_1, s4q12_1]  # from PartIV_Agricultural practice.sav; three separate equipment types (oxen, tractor, other); must OR to binary for harmonization
+    irrigated: s4q13           # from PartIV_Agricultural practice.sav
+    interview_date: s1q5
+    weight: weight             # from PartIV_Agricultural practice.sav; SEGMENT-LEVEL, not plot-level (see decisions.md)
 2025:
   production: {}   # V1 to V100 unlabeled in the dictionary; map by position with /audit-sas
