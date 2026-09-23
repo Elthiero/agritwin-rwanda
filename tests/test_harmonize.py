@@ -10,6 +10,7 @@ from agritwin.harmonize.core import (
     build_confidence_table,
     join_season_files,
     rename_to_canonical,
+    value_label_rows,
 )
 from tests.fixtures.synthetic_sas import (
     YEAR_MAP,
@@ -117,6 +118,24 @@ def test_weight_level_segment_for_2019_style_year():
     # would give a different, wrong value if the join collided).
     seg2_row = df[df["segment_id"] == 2].iloc[0]
     assert seg2_row["weight"] == 999.0
+
+
+def test_value_label_rows_preserves_year_specific_codes():
+    # farmer_type code 2 means different things in different years (large scale farmer
+    # in 2019 vs small scale cooperative in 2020+); the sidecar table must keep these
+    # separate by year, not collapse them into one global code -> label dictionary.
+    labels_2019 = {1: "small scale farmer", 2: "large scale farmer"}
+    labels_2020 = {
+        1: "Small scale farmer as individual",
+        2: "Small Scale farmer as Coperative",
+        3: "Large scale farmer",
+    }
+    rows_2019 = value_label_rows(2019, "farmer_type", labels_2019)
+    rows_2020 = value_label_rows(2020, "farmer_type", labels_2020)
+    assert {r["code"]: r["label"] for r in rows_2019}[2] == "large scale farmer"
+    assert {r["code"]: r["label"] for r in rows_2020}[2] == "Small Scale farmer as Coperative"
+    assert all(r["year"] == 2019 for r in rows_2019)
+    assert all(r["variable"] == "farmer_type" for r in rows_2019)
 
 
 def test_confidence_table_flags_low_confidence_entry():

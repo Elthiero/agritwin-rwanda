@@ -61,6 +61,26 @@ BOOLEAN_FLAG_VARS = frozenset(
     }
 )
 
+# Canonical variables kept as raw source codes in the output schema (not decoded to
+# booleans, and not remapped to a small fixed vocabulary like `crop`). Confirmed by
+# /audit-sas: the code -> label mapping for these is NOT stable across years. farmer_type
+# code 2 means "large scale farmer" in 2019 but "small scale farmer as cooperative" in
+# 2020+ (2019 has 2 codes, 2020+ has 4); erosion_degree has 3 levels in 2019 vs 4 in
+# 2024+. A consumer must decode using the correct year's labels (see
+# stg_sas_value_labels.parquet, written by run.py), never assume a fixed meaning per
+# code across years. See docs/decisions.md 2026-09-23.
+CODED_VARIABLES = ("farmer_type", "erosion_degree")
+
+
+def value_label_rows(year: int, variable: str, labels: dict) -> list[dict]:
+    """Turn a {code: label} dict (as read by io.read_value_labels) into rows for the
+    stg_sas_value_labels sidecar table."""
+    return [
+        {"year": year, "variable": variable, "code": code, "label": label}
+        for code, label in labels.items()
+    ]
+
+
 # canonical staging schema columns produced by this module, per src/agritwin/CLAUDE.md,
 # minus yield_kg_ha and qc_flag (owned by clean/, not harmonize/). district_name is left
 # null: no province/district-code -> name crosswalk exists yet (see decisions/plan notes).
