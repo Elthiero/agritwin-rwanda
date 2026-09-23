@@ -1,0 +1,8 @@
+# Map source crop codes or labels (per year) to canonical crops. Filled by /audit-sas.
+canonical:
+  maize: {label_en: Maize, label_fr: "Maïs", label_rw: Ibigori}
+  beans: {label_en: Beans, label_fr: Haricots, label_rw: Ibishyimbo}
+  irish_potato: {label_en: Irish potato, label_fr: "Pomme de terre", label_rw: Ibirayi}
+  sorghum: {label_en: Sorghum, label_fr: Sorgho, label_rw: Amasaka}
+  rice: {label_en: Rice, label_fr: Riz, label_rw: Umuceri}
+source_codes: {}

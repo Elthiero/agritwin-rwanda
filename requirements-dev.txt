@@ -1,0 +1,19 @@
+# AgriTwin Rwanda -- development-only dependencies (tests, linting, notebooks, docs).
+# Install alongside requirements.txt:
+#   pip install -r requirements.txt -r requirements-dev.txt
+
+-r requirements.txt
+
+pytest
+pytest-cov
+hypothesis
+ruff
+mypy
+types-PyYAML
+types-geopandas
+pre-commit
+nbstripout
+jupyterlab
+httpx
+mkdocs-material
+mkdocstrings[python]

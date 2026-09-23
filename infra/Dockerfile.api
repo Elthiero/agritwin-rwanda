@@ -1,0 +1,11 @@
+FROM python:3.12-slim AS base
+WORKDIR /app
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml ./
+COPY api ./api
+COPY src ./src
+RUN pip install --no-cache-dir -e .
+COPY data/public ./data/public
+EXPOSE 8000
+CMD ["uvicorn", "api.app.main:app", "--host", "0.0.0.0", "--port", "8000"]

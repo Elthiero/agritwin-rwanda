@@ -1,0 +1,44 @@
+# Claude Code project files: kept on disk for local development, never pushed
+# to GitHub. Claude Code still reads these locally; git just never tracks
+# them, so the public repo shows only the product, not the tooling used to
+# build it. If any of these were committed before this rule was added, run
+# `git rm -r --cached .claude CLAUDE.md` once to untrack them.
+.claude/
+CLAUDE.md
+
+# data: never commit microdata
+data/raw/
+data/interim/
+data/staging/
+data/marts/
+artifacts/
+*.dta
+*.sav
+*.sas7bdat
+!tests/fixtures/**
+
+# secrets
+.env
+.env.*
+!.env.example
+secrets/
+*.json.key
+
+# python
+.venv/
+venv/
+env/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# node
+web/node_modules/
+web/dist/
+
+# misc
+.DS_Store
+site/
+mlruns/

@@ -1,0 +1,107 @@
+# Confirmed data sources for AgriTwin Rwanda.
+# NISR catalog IDs verified against the live catalog on 23 September 2026.
+# GEE dataset IDs and scale factors verified by an actual ee.Initialize() +
+# dataset access test on the same date (see scripts/test_gee.py).
+
+nisr:
+  base_url: "https://www.microdata.statistics.gov.rw/index.php/catalog"
+  # pattern per study: {base_url}/{catalog_id}
+  #   overview:        {base_url}/{catalog_id}
+  #   data dictionary:  {base_url}/{catalog_id}/data-dictionary
+  #   download:         {base_url}/{catalog_id}/get-microdata   (login required)
+  sas:
+    2013: {catalog_id: 66,  confirmed: true, note: "core scope starts 2019; earlier years optional"}
+    2014: {catalog_id: 78,  confirmed: true, note: "optional, not in core scope"}
+    2015: {catalog_id: 77,  confirmed: true, note: "optional, not in core scope"}
+    2017: {catalog_id: 88,  confirmed: true, note: "optional, not in core scope"}
+    2019: {catalog_id: 93,  confirmed: true, note: "core scope start"}
+    2020: {catalog_id: 99,  confirmed: true}
+    2021: {catalog_id: 102, confirmed: true}
+    2022: {catalog_id: 103, confirmed: true}
+    2023: {catalog_id: 111, confirmed: true}
+    2024: {catalog_id: 113, confirmed: true, note: "reference year, fully labeled dictionary"}
+    2025: {catalog_id: 124, confirmed: true, note: "production files unlabeled (V1-V100); run /audit-sas 2025 before use"}
+    # 2016 and 2018 not confirmed; look up the same way if the core scope is extended.
+  ahs:
+    2024: {catalog_id: 123, confirmed: true}
+
+gee:
+  # ee.Initialize(project=<your project id>) then use these snippets directly.
+  # Verified reachable and returning expected bands on 23 September 2026.
+  datasets:
+    modis_ndvi:
+      id: "MODIS/061/MOD13Q1"
+      type: ImageCollection
+      resolution_m: 250
+      cadence: "16-day composite"
+      bands_used: [NDVI, EVI]
+      scale_factor: 0.0001          # stored as int16 x10000; multiply by 0.0001 for real NDVI/EVI in [-1, 1]
+      use: "primary nowcast signal, full 2019-2025 history"
+    sentinel2_sr:
+      id: "COPERNICUS/S2_SR_HARMONIZED"
+      type: ImageCollection
+      resolution_m: 10
+      cadence: "~5 day"
+      bands_used: [B4, B8]          # red, NIR, for computing NDVI at 10m
+      scale_factor: 0.0001          # surface reflectance bands are int, x10000
+      use: "current-season high-resolution map; reliable coverage only from ~2019 onward"
+      cloud_mask_band: SCL          # use Scene Classification Layer to mask cloud/shadow before compositing
+    chirps_daily:
+      id: "UCSB-CHG/CHIRPS/DAILY"
+      type: ImageCollection
+      resolution_m: 5566
+      cadence: daily
+      bands_used: [precipitation]
+      scale_factor: 1.0             # already in mm/day, no rescale needed
+      use: "rainfall totals and anomalies, driver + nowcast features"
+    esa_worldcover:
+      id: "ESA/WorldCover/v200"
+      type: ImageCollection
+      resolution_m: 10
+      cadence: "single map, 2021"
+      bands_used: [Map]
+      scale_factor: null            # categorical class codes, no rescale; class 40 = cropland
+      cropland_class: 40
+      use: "cropland mask so NDVI/rainfall are averaged over cropland pixels only"
+    isda_ph:
+      id: "ISDASOIL/Africa/v1/ph"
+      type: Image
+      resolution_m: 30
+      bands_used: [mean_0_20]
+      scale_factor_formula: "x / 10"
+      use: "soil pH feature for the driver model"
+    isda_nitrogen:
+      id: "ISDASOIL/Africa/v1/nitrogen_total"
+      type: Image
+      resolution_m: 30
+      bands_used: [mean_0_20]
+      scale_factor_formula: "exp(x / 100) - 1"
+      use: "soil nitrogen feature"
+    isda_carbon:
+      id: "ISDASOIL/Africa/v1/carbon_organic"
+      type: Image
+      resolution_m: 30
+      bands_used: [mean_0_20]
+      scale_factor_formula: "exp(x / 10) - 1"
+      use: "soil organic carbon feature"
+    isda_texture:
+      id: "ISDASOIL/Africa/v1/texture_class"
+      type: Image
+      resolution_m: 30
+      bands_used: [texture_0_20]
+      scale_factor: null             # categorical, no rescale
+      use: "soil texture class feature"
+    srtm:
+      id: "USGS/SRTMGL1_003"
+      type: Image
+      resolution_m: 30
+      bands_used: [elevation]
+      scale_factor: 1.0
+      use: "terrain, slope for zoning; not required for MVP but cheap to pull alongside soil"
+    gaul_districts:
+      id: "FAO/GAUL/2015/level2"
+      type: FeatureCollection
+      filter_field: ADM0_NAME
+      filter_value: "Rwanda"
+      fields_used: [ADM2_NAME, ADM2_CODE]
+      use: "district (admin2) boundary geometry for the map layer; ADM2_CODE is GAUL's own code, not the NISR survey district_code, and is not yet reconciled to it"

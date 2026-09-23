@@ -1,0 +1,44 @@
+# AgriTwin Rwanda -- runtime dependencies (pipeline + API).
+# Create a venv and install with:
+#   python3 -m venv venv
+#   source venv/bin/activate        # Windows: venv\Scripts\activate
+#   pip install -r requirements.txt
+# For linting, tests, notebooks and docs, also install requirements-dev.txt.
+
+# data handling
+polars
+pandas
+pyarrow
+pyreadstat
+duckdb
+
+# geospatial
+geopandas
+shapely
+pyogrio
+
+# satellite data
+earthengine-api
+
+# modelling
+scikit-learn
+lightgbm
+shap
+samplics
+
+# utilities
+pyyaml
+loguru
+typer
+python-dotenv
+
+# reporting / PDF briefs
+matplotlib
+weasyprint
+jinja2
+
+# API
+fastapi
+uvicorn[standard]
+pydantic>=2
+pydantic-settings

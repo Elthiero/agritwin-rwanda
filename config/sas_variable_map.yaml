@@ -1,0 +1,33 @@
+# canonical_name: source column per year and file type.
+# 2024 Season B production names come from the NISR data dictionary (catalog 113, file F6).
+# All other years must be filled by the /audit-sas skill. Do not guess.
+2024:
+  production:
+    segment_id: Segment_ID
+    province_code: s1q1
+    district_code: s1q2
+    stratum: s1q3
+    segment_no: s1q4
+    farmer_id: s1q6
+    farmer_type: s1q7
+    plot_id: s2q1
+    plot_area_sqm: s2q2
+    n_main_crops: s2q3
+    crop_code_src: s2q4
+    sowing_date: s2q7
+    improved_seed: s2q9
+    harvest_kg_plot: s2q21      # verify: total harvest this season (kg)
+    harvest_kg_crop: s2q22      # verify: total for this crop this season (kg)
+    qty_lost_kg: s2q39
+    organic_fert: s3q3
+    inorganic_fert: s3q9
+    pesticide: s3q19
+    erosion_degree: s4q1
+    anti_erosion: s4q3
+    land_consolidation: s4q6
+    mechanized: s4q9
+    irrigated: s4q15
+    interview_date: s5q12
+    weight: plot_weight
+2025:
+  production: {}   # V1 to V100 unlabeled in the dictionary; map by position with /audit-sas
