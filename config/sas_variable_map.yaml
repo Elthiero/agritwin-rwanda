@@ -1,202 +1,205 @@
-# canonical_name: source column per year and file type.
-# Every mapping includes explicit confidence level: high, medium, low.
+# canonical_name: {source, confidence, note} per year and file type.
+# source: a column name (str), a list of columns (list, OR'd for booleans), or null (not collected).
+# confidence: high | low. low means the mapping is indirect or inferred; harmonize.py must
+#   carry this forward as metadata (see stg_sas_variable_confidence.parquet), not drop the column.
+# note: optional, free text.
 # 2024 production names confirmed by /audit-sas from the raw .dta column labels directly
 # (catalog 113): Season A and Season B production files share the identical instrument,
 # same column names and labels for every canonical variable. All other years filled by /audit-sas.
-# Do not guess. All variable names must match exactly across years.
+# Do not guess. All canonical variable names must match exactly across years.
 2024:
   production:
-    segment_id: Segment_ID  # confidence: high
-    province_code: s1q1  # confidence: high
-    district_code: s1q2  # confidence: high
-    stratum: s1q3  # confidence: high
-    segment_no: s1q4  # confidence: high
-    farmer_id: s1q6  # confidence: high
-    farmer_type: s1q7  # confidence: high
-    plot_id: s2q1  # confidence: high
-    plot_area_sqm: s2q2  # confidence: high
-    n_main_crops: s2q3  # confidence: high
-    crop_code_src: s2q4  # confidence: high
-    sowing_date: s2q7  # confidence: high
-    improved_seed: s2q9  # confidence: high
-    harvest_kg_plot: s2q21  # confidence: high, note: total for all crops on plot
-    harvest_kg_crop: s2q22  # confidence: high, note: crop-specific harvest; use for pure-stand plots
-    qty_lost_kg: s2q39  # confidence: high, note: total loss after harvest
-    organic_fert: s3q3  # confidence: high
-    inorganic_fert: s3q9  # confidence: high
-    pesticide: s3q19  # confidence: high
-    erosion_degree: s4q1  # confidence: high
-    anti_erosion: s4q3  # confidence: high
-    land_consolidation: s4q6  # confidence: high
-    mechanized: s4q9  # confidence: high, note: ask whether used mechanical equipment on plot
-    irrigated: s4q15  # confidence: high
-    interview_date: s5q12  # confidence: high
-    weight: plot_weight  # confidence: high, note: plot-level weight
+    segment_id: {source: Segment_ID, confidence: high}
+    province_code: {source: s1q1, confidence: high}
+    district_code: {source: s1q2, confidence: high}
+    stratum: {source: s1q3, confidence: high}
+    segment_no: {source: s1q4, confidence: high}
+    farmer_id: {source: s1q6, confidence: high}
+    farmer_type: {source: s1q7, confidence: high}
+    plot_id: {source: s2q1, confidence: high}
+    plot_area_sqm: {source: s2q2, confidence: high}
+    n_main_crops: {source: s2q3, confidence: high}
+    crop_code_src: {source: s2q4, confidence: high}
+    sowing_date: {source: s2q7, confidence: high}
+    improved_seed: {source: s2q9, confidence: high}
+    harvest_kg_plot: {source: s2q21, confidence: high, note: "total for all crops on plot"}
+    harvest_kg_crop: {source: s2q22, confidence: high, note: "NOT used for canonical harvest_kg (see decisions.md 2026-09-23): cross-tab shows s2q22 systematically exceeds s2q21, consistent with s2q22 capturing projected/expected production rather than actual harvest. harvest_kg always sources from s2q21."}
+    qty_lost_kg: {source: s2q39, confidence: high, note: "total loss after harvest"}
+    organic_fert: {source: s3q3, confidence: high}
+    inorganic_fert: {source: s3q9, confidence: high}
+    pesticide: {source: s3q19, confidence: high}
+    erosion_degree: {source: s4q1, confidence: high}
+    anti_erosion: {source: s4q3, confidence: high}
+    land_consolidation: {source: s4q6, confidence: high}
+    mechanized: {source: s4q9, confidence: high, note: "ask whether used mechanical equipment on plot"}
+    irrigated: {source: s4q15, confidence: high}
+    interview_date: {source: s5q12, confidence: high}
+    weight: {source: plot_weight, confidence: high, note: "plot-level weight"}
 2019:
   production:
-    segment_id: Segment_ID  # confidence: high
-    province_code: s1q1  # confidence: high
-    district_code: s1q2  # confidence: high
-    stratum: s1q3  # confidence: high
-    segment_no: s1q4  # confidence: high
-    farmer_id: null  # confidence: high, note: not collected in 2019
-    farmer_type: s2q3_1  # confidence: high
-    plot_id: s2q1  # confidence: high
-    plot_area_sqm: s2q2  # confidence: high, note: labeled inconsistently (m2 vs ha) but unit confirmed as sqm
-    n_main_crops: s2q5  # confidence: high
-    crop_code_src: s2q6  # confidence: high
-    sowing_date: s2q8  # confidence: high
-    improved_seed: null  # confidence: low, note: no direct yes/no flag; could proxy from s2q14_1/2 (improved seed qty) if needed
-    harvest_kg_plot: s2q21  # confidence: high, note: total for all crops on plot
-    harvest_kg_crop: null  # confidence: high, note: not separate column; equals s2q21 for pure-stand by definition
-    qty_lost_kg: s2q37  # confidence: high, note: quantity lost after harvest
-    organic_fert: s3q1  # confidence: high
-    inorganic_fert: s3q5  # confidence: high
-    pesticide: s3q13  # confidence: high
-    erosion_degree: s4q1  # confidence: high
-    anti_erosion: s4q2  # confidence: high
-    land_consolidation: null  # confidence: high, note: not collected in 2019
-    mechanized: [s4q10_1, s4q11_1, s4q12_1]  # confidence: high, note: three separate flags (oxen, tractor, other); must OR to binary
-    irrigated: s4q13  # confidence: high
-    interview_date: s1q5  # confidence: high
-    weight: weight  # confidence: high, note: SEGMENT-LEVEL, not plot-level (see decisions.md)
+    segment_id: {source: Segment_ID, confidence: high}
+    province_code: {source: s1q1, confidence: high}
+    district_code: {source: s1q2, confidence: high}
+    stratum: {source: s1q3, confidence: high}
+    segment_no: {source: s1q4, confidence: high}
+    farmer_id: {source: null, confidence: high, note: "not collected in 2019"}
+    farmer_type: {source: s2q3_1, confidence: high}
+    plot_id: {source: s2q1, confidence: high}
+    plot_area_sqm: {source: s2q2, confidence: high, note: "labeled inconsistently (m2 vs ha) but unit confirmed as sqm"}
+    n_main_crops: {source: s2q5, confidence: high}
+    crop_code_src: {source: s2q6, confidence: high}
+    sowing_date: {source: s2q8, confidence: high}
+    improved_seed: {source: null, confidence: low, note: "no direct yes/no flag; could proxy from s2q14_1/2 (improved seed qty) if needed"}
+    harvest_kg_plot: {source: s2q21, confidence: high, note: "total for all crops on plot"}
+    harvest_kg_crop: {source: null, confidence: high, note: "not separate column; equals s2q21 for pure-stand by definition"}
+    qty_lost_kg: {source: s2q37, confidence: high, note: "quantity lost after harvest"}
+    organic_fert: {source: s3q1, confidence: high}
+    inorganic_fert: {source: s3q5, confidence: high}
+    pesticide: {source: s3q13, confidence: high}
+    erosion_degree: {source: s4q1, confidence: high}
+    anti_erosion: {source: s4q2, confidence: high}
+    land_consolidation: {source: null, confidence: high, note: "not collected in 2019"}
+    mechanized: {source: [s4q10_1, s4q11_1, s4q12_1], confidence: high, note: "three separate flags (oxen, tractor, other); must OR to binary"}
+    irrigated: {source: s4q13, confidence: high}
+    interview_date: {source: s1q5, confidence: high}
+    weight: {source: weight, confidence: high, note: "SEGMENT-LEVEL, not plot-level (see decisions.md)"}
 2020:
   production:
-    segment_id: Segment_ID  # confidence: high
-    province_code: s1q1  # confidence: high
-    district_code: s1q2  # confidence: high
-    stratum: s1q3  # confidence: high
-    segment_no: s1q4  # confidence: high
-    farmer_id: s1q6  # confidence: high, note: returned in 2020 after missing from 2019
-    farmer_type: s1q7  # confidence: high
-    plot_id: s2q1  # confidence: high
-    plot_area_sqm: s2q2  # confidence: high
-    n_main_crops: s2q3  # confidence: high
-    crop_code_src: s2q4  # confidence: high
-    sowing_date: s2q7  # confidence: high
-    improved_seed: s2q9  # confidence: high, note: yes/no flag (like 2024+)
-    harvest_kg_plot: s2q21  # confidence: high, note: total for all crops on plot
-    harvest_kg_crop: null  # confidence: high, note: not separate column; equals s2q21 for pure-stand by definition
-    qty_lost_kg: s2q38  # confidence: high, note: total loss after harvest
-    organic_fert: s3q3  # confidence: high
-    inorganic_fert: s3q9  # confidence: high
-    pesticide: s3q19  # confidence: high
-    erosion_degree: s4q1  # confidence: high
-    anti_erosion: s4q3  # confidence: high
-    land_consolidation: s3q25  # confidence: high, note: new question in 2020 (not in 2019)
-    mechanized: [s4q8_1, s4q9_1, s4q10_1]  # confidence: high, note: three separate flags (oxen, tractor, other); must OR to binary
-    irrigated: s4q13  # confidence: high
-    interview_date: null  # confidence: high, note: not present in 2020
-    weight: Plot_weight  # confidence: high, note: plot-level weight (first year with plot-level weighting)
+    segment_id: {source: Segment_ID, confidence: high}
+    province_code: {source: s1q1, confidence: high}
+    district_code: {source: s1q2, confidence: high}
+    stratum: {source: s1q3, confidence: high}
+    segment_no: {source: s1q4, confidence: high}
+    farmer_id: {source: s1q6, confidence: high, note: "returned in 2020 after missing from 2019"}
+    farmer_type: {source: s1q7, confidence: high}
+    plot_id: {source: s2q1, confidence: high}
+    plot_area_sqm: {source: s2q2, confidence: high}
+    n_main_crops: {source: s2q3, confidence: high}
+    crop_code_src: {source: s2q4, confidence: high}
+    sowing_date: {source: s2q7, confidence: high}
+    improved_seed: {source: s2q9, confidence: high, note: "yes/no flag (like 2024+)"}
+    harvest_kg_plot: {source: s2q21, confidence: high, note: "total for all crops on plot"}
+    harvest_kg_crop: {source: null, confidence: high, note: "not separate column; equals s2q21 for pure-stand by definition"}
+    qty_lost_kg: {source: s2q38, confidence: high, note: "total loss after harvest"}
+    organic_fert: {source: s3q3, confidence: high}
+    inorganic_fert: {source: s3q9, confidence: high}
+    pesticide: {source: s3q19, confidence: high}
+    erosion_degree: {source: s4q1, confidence: high}
+    anti_erosion: {source: s4q3, confidence: high}
+    land_consolidation: {source: s3q25, confidence: high, note: "new question in 2020 (not in 2019)"}
+    mechanized: {source: [s4q8_1, s4q9_1, s4q10_1], confidence: high, note: "three separate flags (oxen, tractor, other); must OR to binary"}
+    irrigated: {source: s4q13, confidence: high}
+    interview_date: {source: null, confidence: high, note: "not present in 2020"}
+    weight: {source: Plot_weight, confidence: high, note: "plot-level weight (first year with plot-level weighting)"}
 2021:
   production:
-    segment_id: Segment_ID  # confidence: high
-    province_code: s1q1  # confidence: high
-    district_code: s1q2  # confidence: high
-    stratum: s1q3  # confidence: high
-    segment_no: s1q4  # confidence: high
-    farmer_id: s1q6  # confidence: high
-    farmer_type: s1q7  # confidence: high
-    plot_id: s2q1  # confidence: high
-    plot_area_sqm: s2q2  # confidence: high
-    n_main_crops: s2q3  # confidence: high
-    crop_code_src: s2q4  # confidence: high
-    sowing_date: s2q7  # confidence: high
-    improved_seed: s2q9  # confidence: high
-    harvest_kg_plot: s2q21  # confidence: high, note: total for all crops on plot
-    harvest_kg_crop: null  # confidence: high, note: not separate column; equals s2q21 for pure-stand by definition
-    qty_lost_kg: s2q38  # confidence: high, note: total loss after harvest
-    organic_fert: s3q3  # confidence: high
-    inorganic_fert: s3q9  # confidence: high
-    pesticide: s3q19  # confidence: high
-    erosion_degree: s4q1  # confidence: high
-    anti_erosion: s4q3  # confidence: high
-    land_consolidation: s3q25  # confidence: high, note: same position as 2020
-    mechanized: [s4q8_1, s4q9_1, s4q10_1]  # confidence: high, note: three separate flags; must OR to binary
-    irrigated: s4q13  # confidence: high
-    interview_date: null  # confidence: high, note: not collected in 2021
-    weight: finalplot_weight  # confidence: high, note: plot-level weight (two columns in 2021; use finalplot_weight, not plot_weight)
+    segment_id: {source: Segment_ID, confidence: high}
+    province_code: {source: s1q1, confidence: high}
+    district_code: {source: s1q2, confidence: high}
+    stratum: {source: s1q3, confidence: high}
+    segment_no: {source: s1q4, confidence: high}
+    farmer_id: {source: s1q6, confidence: high}
+    farmer_type: {source: s1q7, confidence: high}
+    plot_id: {source: s2q1, confidence: high}
+    plot_area_sqm: {source: s2q2, confidence: high}
+    n_main_crops: {source: s2q3, confidence: high}
+    crop_code_src: {source: s2q4, confidence: high}
+    sowing_date: {source: s2q7, confidence: high}
+    improved_seed: {source: s2q9, confidence: high}
+    harvest_kg_plot: {source: s2q21, confidence: high, note: "total for all crops on plot"}
+    harvest_kg_crop: {source: null, confidence: high, note: "not separate column; equals s2q21 for pure-stand by definition"}
+    qty_lost_kg: {source: s2q38, confidence: high, note: "total loss after harvest"}
+    organic_fert: {source: s3q3, confidence: high}
+    inorganic_fert: {source: s3q9, confidence: high}
+    pesticide: {source: s3q19, confidence: high}
+    erosion_degree: {source: s4q1, confidence: high}
+    anti_erosion: {source: s4q3, confidence: high}
+    land_consolidation: {source: s3q25, confidence: high, note: "same position as 2020"}
+    mechanized: {source: [s4q8_1, s4q9_1, s4q10_1], confidence: high, note: "three separate flags; must OR to binary"}
+    irrigated: {source: s4q13, confidence: high}
+    interview_date: {source: null, confidence: high, note: "not collected in 2021"}
+    weight: {source: finalplot_weight, confidence: high, note: "plot-level weight (two columns in 2021; use finalplot_weight, not plot_weight)"}
 2022:
   production:
-    segment_id: Segment_ID  # confidence: high
-    province_code: s1q1  # confidence: high
-    district_code: s1q2  # confidence: high
-    stratum: s1q3  # confidence: high
-    segment_no: s1q4  # confidence: high
-    farmer_id: s1q6  # confidence: high
-    farmer_type: s1q7  # confidence: high
-    plot_id: s2q1  # confidence: high
-    plot_area_sqm: s2q2  # confidence: high
-    n_main_crops: s2q3  # confidence: high
-    crop_code_src: s2q4  # confidence: high
-    sowing_date: s2q7  # confidence: high
-    improved_seed: s2q9  # confidence: high
-    harvest_kg_plot: s2q21  # confidence: high, note: total for all crops on plot
-    harvest_kg_crop: null  # confidence: high, note: not separate column; equals s2q21 for pure-stand by definition
-    qty_lost_kg: s2q38  # confidence: high, note: total loss after harvest
-    organic_fert: s3q3  # confidence: high
-    inorganic_fert: s3q9  # confidence: high
-    pesticide: s3q19  # confidence: high
-    erosion_degree: s4q1  # confidence: high
-    anti_erosion: s4q3  # confidence: high
-    land_consolidation: s4q6  # confidence: high, note: moved from s3q25 (2021) to s4q6 (2022+)
-    mechanized: [s4q10_1, s4q11_1, s4q12_1]  # confidence: high, note: three separate flags (oxen, tractor, other); must OR to binary
-    irrigated: s4q15  # confidence: high, note: moved from s4q13 (2021) to s4q15 (2022+)
-    interview_date: null  # confidence: high, note: not collected in 2022
-    weight: plot_weight  # confidence: high, note: plot-level weight (back to plot_weight after finalplot_weight in 2021)
+    segment_id: {source: Segment_ID, confidence: high}
+    province_code: {source: s1q1, confidence: high}
+    district_code: {source: s1q2, confidence: high}
+    stratum: {source: s1q3, confidence: high}
+    segment_no: {source: s1q4, confidence: high}
+    farmer_id: {source: s1q6, confidence: high}
+    farmer_type: {source: s1q7, confidence: high}
+    plot_id: {source: s2q1, confidence: high}
+    plot_area_sqm: {source: s2q2, confidence: high}
+    n_main_crops: {source: s2q3, confidence: high}
+    crop_code_src: {source: s2q4, confidence: high}
+    sowing_date: {source: s2q7, confidence: high}
+    improved_seed: {source: s2q9, confidence: high}
+    harvest_kg_plot: {source: s2q21, confidence: high, note: "total for all crops on plot"}
+    harvest_kg_crop: {source: null, confidence: high, note: "not separate column; equals s2q21 for pure-stand by definition"}
+    qty_lost_kg: {source: s2q38, confidence: high, note: "total loss after harvest"}
+    organic_fert: {source: s3q3, confidence: high}
+    inorganic_fert: {source: s3q9, confidence: high}
+    pesticide: {source: s3q19, confidence: high}
+    erosion_degree: {source: s4q1, confidence: high}
+    anti_erosion: {source: s4q3, confidence: high}
+    land_consolidation: {source: s4q6, confidence: high, note: "moved from s3q25 (2021) to s4q6 (2022+)"}
+    mechanized: {source: [s4q10_1, s4q11_1, s4q12_1], confidence: high, note: "three separate flags (oxen, tractor, other); must OR to binary"}
+    irrigated: {source: s4q15, confidence: high, note: "moved from s4q13 (2021) to s4q15 (2022+)"}
+    interview_date: {source: null, confidence: high, note: "not collected in 2022"}
+    weight: {source: plot_weight, confidence: high, note: "plot-level weight (back to plot_weight after finalplot_weight in 2021)"}
 2023:
   production:
-    segment_id: Segment_ID  # confidence: high
-    province_code: s1q1  # confidence: high
-    district_code: s1q2  # confidence: high
-    stratum: s1q3  # confidence: high
-    segment_no: s1q4  # confidence: high
-    farmer_id: s1q6  # confidence: high
-    farmer_type: s1q7  # confidence: high
-    plot_id: s2q1  # confidence: high
-    plot_area_sqm: s2q2  # confidence: high
-    n_main_crops: s2q3  # confidence: high
-    crop_code_src: s2q4  # confidence: high
-    sowing_date: s2q7  # confidence: high
-    improved_seed: s2q9  # confidence: high
-    harvest_kg_plot: s2q21  # confidence: high, note: total for all crops on plot
-    harvest_kg_crop: s2q22  # confidence: high, note: separate crop-specific harvest column (as in 2024+); use for pure-stand plots
-    qty_lost_kg: s2q39  # confidence: high, note: total loss after harvest
-    organic_fert: s3q3  # confidence: high
-    inorganic_fert: s3q9  # confidence: high
-    pesticide: s3q19  # confidence: high
-    erosion_degree: s4q1  # confidence: high
-    anti_erosion: s4q3  # confidence: high
-    land_consolidation: s4q6  # confidence: high, note: same position as 2022
-    mechanized: [s4q10_1, s4q11_1, s4q12_1]  # confidence: high, note: three separate flags; must OR to binary
-    irrigated: s4q15  # confidence: high
-    interview_date: null  # confidence: high, note: not collected in 2023
-    weight: plot_weight  # confidence: high, note: plot-level weight
+    segment_id: {source: Segment_ID, confidence: high}
+    province_code: {source: s1q1, confidence: high}
+    district_code: {source: s1q2, confidence: high}
+    stratum: {source: s1q3, confidence: high}
+    segment_no: {source: s1q4, confidence: high}
+    farmer_id: {source: s1q6, confidence: high}
+    farmer_type: {source: s1q7, confidence: high}
+    plot_id: {source: s2q1, confidence: high}
+    plot_area_sqm: {source: s2q2, confidence: high}
+    n_main_crops: {source: s2q3, confidence: high}
+    crop_code_src: {source: s2q4, confidence: high}
+    sowing_date: {source: s2q7, confidence: high}
+    improved_seed: {source: s2q9, confidence: high}
+    harvest_kg_plot: {source: s2q21, confidence: high, note: "total for all crops on plot"}
+    harvest_kg_crop: {source: s2q22, confidence: high, note: "NOT used for canonical harvest_kg (see decisions.md 2026-09-23): same pattern confirmed as 2024. harvest_kg always sources from s2q21."}
+    qty_lost_kg: {source: s2q39, confidence: high, note: "total loss after harvest"}
+    organic_fert: {source: s3q3, confidence: high}
+    inorganic_fert: {source: s3q9, confidence: high}
+    pesticide: {source: s3q19, confidence: high}
+    erosion_degree: {source: s4q1, confidence: high}
+    anti_erosion: {source: s4q3, confidence: high}
+    land_consolidation: {source: s4q6, confidence: high, note: "same position as 2022"}
+    mechanized: {source: [s4q10_1, s4q11_1, s4q12_1], confidence: high, note: "three separate flags; must OR to binary"}
+    irrigated: {source: s4q15, confidence: high}
+    interview_date: {source: null, confidence: high, note: "not collected in 2023"}
+    weight: {source: plot_weight, confidence: high, note: "plot-level weight"}
 2025:
   production:
-    segment_id: Segment_ID  # confidence: high
-    province_code: s1q1  # confidence: high
-    district_code: s1q2  # confidence: high
-    stratum: s1q3  # confidence: high
-    segment_no: s1q4  # confidence: high
-    farmer_id: s1q6  # confidence: high
-    farmer_type: s1q7  # confidence: high
-    plot_id: s2q1  # confidence: high
-    plot_area_sqm: s2q2  # confidence: high
-    n_main_crops: s2q3  # confidence: high
-    crop_code_src: s2q4  # confidence: high
-    sowing_date: s2q7  # confidence: high
-    improved_seed: s2q9  # confidence: high
-    harvest_kg_plot: s2q21  # confidence: high, note: total for all crops on plot
-    harvest_kg_crop: s2q22  # confidence: high, note: separate crop-specific harvest column; use for pure-stand plots
-    qty_lost_kg: null  # confidence: high, note: questionnaire structure changed; 2025 uses itemized losses (s2q41–s2q50) instead of total loss column
-    organic_fert: s3q3  # confidence: high
-    inorganic_fert: s3q9  # confidence: high
-    pesticide: s3q19  # confidence: high
-    erosion_degree: s4q1  # confidence: high
-    anti_erosion: s4q3  # confidence: high
-    land_consolidation: s4q6  # confidence: high, note: same position as 2022+
-    mechanized: [s4q10_1, s4q11_1, s4q12_1]  # confidence: high, note: three separate flags; must OR to binary
-    irrigated: s4q14  # confidence: high, note: moved from s4q15 in 2022-2023 to s4q14 in practice file
-    interview_date: null  # confidence: high, note: not collected in 2025
-    weight: plot_weight  # confidence: high, note: plot-level weight
+    segment_id: {source: Segment_ID, confidence: high}
+    province_code: {source: s1q1, confidence: high}
+    district_code: {source: s1q2, confidence: high}
+    stratum: {source: s1q3, confidence: high}
+    segment_no: {source: s1q4, confidence: high}
+    farmer_id: {source: s1q6, confidence: high}
+    farmer_type: {source: s1q7, confidence: high}
+    plot_id: {source: s2q1, confidence: high}
+    plot_area_sqm: {source: s2q2, confidence: high}
+    n_main_crops: {source: s2q3, confidence: high}
+    crop_code_src: {source: s2q4, confidence: high}
+    sowing_date: {source: s2q7, confidence: high}
+    improved_seed: {source: s2q9, confidence: high}
+    harvest_kg_plot: {source: s2q21, confidence: high, note: "total for all crops on plot"}
+    harvest_kg_crop: {source: s2q22, confidence: high, note: "NOT used for canonical harvest_kg (see decisions.md 2026-09-23): same pattern confirmed as 2024. harvest_kg always sources from s2q21."}
+    qty_lost_kg: {source: null, confidence: high, note: "questionnaire structure changed; 2025 uses itemized losses (s2q41–s2q50) instead of total loss column"}
+    organic_fert: {source: s3q3, confidence: high}
+    inorganic_fert: {source: s3q9, confidence: high}
+    pesticide: {source: s3q19, confidence: high}
+    erosion_degree: {source: s4q1, confidence: high}
+    anti_erosion: {source: s4q3, confidence: high}
+    land_consolidation: {source: s4q6, confidence: high, note: "same position as 2022+"}
+    mechanized: {source: [s4q10_1, s4q11_1, s4q12_1], confidence: high, note: "three separate flags; must OR to binary"}
+    irrigated: {source: s4q14, confidence: high, note: "moved from s4q15 in 2022-2023 to s4q14 in practice file"}
+    interview_date: {source: null, confidence: high, note: "not collected in 2025"}
+    weight: {source: plot_weight, confidence: high, note: "plot-level weight"}
