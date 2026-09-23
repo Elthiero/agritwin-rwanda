@@ -5,14 +5,13 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """API configuration."""
 
-    model_config = ConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     DATA_DIR: Path = Path(__file__).resolve().parents[2] / "data" / "public"
     ALLOWED_ORIGINS: list[str] = [
