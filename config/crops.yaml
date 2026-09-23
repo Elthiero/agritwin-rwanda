@@ -1,8 +1,21 @@
 # Map source crop codes or labels (per year) to canonical crops. Filled by /audit-sas.
+# MVP crop decided 2026-09-23 from the 2024 audit: sorghum, not rice. Season B 2024 has
+# 878 sorghum pure-stand plots vs 204 to 216 rice plots per season, a much larger sample
+# for district-level attainable yield percentiles. Rice stays in the canonical list for
+# a possible post-MVP addition, but is not in scope now.
 canonical:
   maize: {label_en: Maize, label_fr: "Maïs", label_rw: Ibigori}
   beans: {label_en: Beans, label_fr: Haricots, label_rw: Ibishyimbo}
   irish_potato: {label_en: Irish potato, label_fr: "Pomme de terre", label_rw: Ibirayi}
   sorghum: {label_en: Sorghum, label_fr: Sorgho, label_rw: Amasaka}
   rice: {label_en: Rice, label_fr: Riz, label_rw: Umuceri}
-source_codes: {}
+source_codes:
+  2024:
+    # source is s2q4 (fine-grained, value-labeled). CropCategory is a coarser derived
+    # grouping in the raw file and is not used as a mapping source.
+    101: maize
+    106: beans   # bush bean
+    107: beans   # climbing bean
+    110: irish_potato
+    103: sorghum
+    102: rice    # paddy rice, kept for reference, not MVP

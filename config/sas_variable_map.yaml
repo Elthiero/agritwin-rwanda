@@ -1,5 +1,7 @@
 # canonical_name: source column per year and file type.
-# 2024 Season B production names come from the NISR data dictionary (catalog 113, file F6).
+# 2024 production names confirmed by /audit-sas from the raw .dta column labels directly
+# (catalog 113): Season A and Season B production files share the identical instrument,
+# same column names and labels for every canonical variable. High confidence, both seasons.
 # All other years must be filled by the /audit-sas skill. Do not guess.
 2024:
   production:
@@ -16,8 +18,8 @@
     crop_code_src: s2q4
     sowing_date: s2q7
     improved_seed: s2q9
-    harvest_kg_plot: s2q21      # verify: total harvest this season (kg)
-    harvest_kg_crop: s2q22      # verify: total for this crop this season (kg)
+    harvest_kg_plot: s2q21      # open: equal to s2q22 on pure-stand plots, confirm with cross-tab
+    harvest_kg_crop: s2q22      # open: equal to s2q21 on pure-stand plots, confirm with cross-tab
     qty_lost_kg: s2q39
     organic_fert: s3q3
     inorganic_fert: s3q9
