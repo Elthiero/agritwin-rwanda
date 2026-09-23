@@ -51,6 +51,25 @@ def parse_district_zonal_stats(fc_geojson: dict, value_field: str, value_col: st
     return pd.DataFrame(rows)
 
 
+def parse_district_zonal_stats_hdx(
+    fc_geojson: dict, value_field: str, value_col: str
+) -> pd.DataFrame:
+    """Like parse_district_zonal_stats, but for a reduceRegions() result over
+    boundaries.hdx_districts_fc(), whose features carry nisr_district_code (not
+    gaul_district_code) natively, so results built on it need no further crosswalk
+    join. See docs/decisions.md 2026-09-23.
+    """
+    rows = [
+        {
+            "nisr_district_code": feature["properties"]["nisr_district_code"],
+            "district_name": feature["properties"]["district_name"],
+            value_col: feature["properties"].get(value_field),
+        }
+        for feature in fc_geojson["features"]
+    ]
+    return pd.DataFrame(rows)
+
+
 def fetch_ndvi_district_stats(
     districts_fc: ee.FeatureCollection, start_date: str, end_date: str, scale_m: int
 ) -> dict:

@@ -11,6 +11,7 @@ def test_row_count_preserved_after_join():
     """
     ndvi = pd.DataFrame(
         {
+            "nisr_district_code": [11, 11, 43, 43],
             "district_name": ["Kigali", "Kigali", "Musanze", "Musanze"],
             "gaul_district_code": [1, 1, 2, 2],
             "year": [2024, 2024, 2024, 2024],
@@ -20,6 +21,7 @@ def test_row_count_preserved_after_join():
     )
     rainfall = pd.DataFrame(
         {
+            "nisr_district_code": [11, 11, 43, 43],
             "district_name": ["Kigali", "Kigali", "Musanze", "Musanze"],
             "gaul_district_code": [1, 1, 2, 2],
             "year": [2024, 2024, 2024, 2024],
@@ -29,6 +31,7 @@ def test_row_count_preserved_after_join():
     )
     cropland = pd.DataFrame(
         {
+            "nisr_district_code": [11, 43],
             "district_name": ["Kigali", "Musanze"],
             "gaul_district_code": [1, 2],
             "cropland_fraction": [0.45, 0.38],
@@ -36,6 +39,7 @@ def test_row_count_preserved_after_join():
     )
     soil = pd.DataFrame(
         {
+            "nisr_district_code": [11, 43],
             "district_name": ["Kigali", "Musanze"],
             "gaul_district_code": [1, 2],
             "soil_ph": [6.2, 5.8],
@@ -47,6 +51,7 @@ def test_row_count_preserved_after_join():
     result = join_gee_features(ndvi, rainfall, cropland, soil)
     assert len(result) == 4
     assert list(result.columns) == [
+        "nisr_district_code",
         "district_name",
         "gaul_district_code",
         "year",
@@ -67,6 +72,7 @@ def test_broadcast_time_invariant_across_seasons_and_years():
     """
     ndvi = pd.DataFrame(
         {
+            "nisr_district_code": [11, 11],
             "district_name": ["Kigali", "Kigali"],
             "gaul_district_code": [1, 1],
             "year": [2024, 2025],
@@ -76,6 +82,7 @@ def test_broadcast_time_invariant_across_seasons_and_years():
     )
     rainfall = pd.DataFrame(
         {
+            "nisr_district_code": [11, 11],
             "district_name": ["Kigali", "Kigali"],
             "gaul_district_code": [1, 1],
             "year": [2024, 2025],
@@ -85,6 +92,7 @@ def test_broadcast_time_invariant_across_seasons_and_years():
     )
     cropland = pd.DataFrame(
         {
+            "nisr_district_code": [11],
             "district_name": ["Kigali"],
             "gaul_district_code": [1],
             "cropland_fraction": [0.45],
@@ -92,6 +100,7 @@ def test_broadcast_time_invariant_across_seasons_and_years():
     )
     soil = pd.DataFrame(
         {
+            "nisr_district_code": [11],
             "district_name": ["Kigali"],
             "gaul_district_code": [1],
             "soil_ph": [6.2],
@@ -110,6 +119,7 @@ def test_no_nulls_in_key_columns():
     """All key columns (district, year, season) must be non-null after join."""
     ndvi = pd.DataFrame(
         {
+            "nisr_district_code": [11],
             "district_name": ["Kigali"],
             "gaul_district_code": [1],
             "year": [2024],
@@ -119,6 +129,7 @@ def test_no_nulls_in_key_columns():
     )
     rainfall = pd.DataFrame(
         {
+            "nisr_district_code": [11],
             "district_name": ["Kigali"],
             "gaul_district_code": [1],
             "year": [2024],
@@ -128,6 +139,7 @@ def test_no_nulls_in_key_columns():
     )
     cropland = pd.DataFrame(
         {
+            "nisr_district_code": [11],
             "district_name": ["Kigali"],
             "gaul_district_code": [1],
             "cropland_fraction": [0.45],
@@ -135,6 +147,7 @@ def test_no_nulls_in_key_columns():
     )
     soil = pd.DataFrame(
         {
+            "nisr_district_code": [11],
             "district_name": ["Kigali"],
             "gaul_district_code": [1],
             "soil_ph": [6.2],
@@ -144,4 +157,6 @@ def test_no_nulls_in_key_columns():
         }
     )
     result = join_gee_features(ndvi, rainfall, cropland, soil)
-    assert not result[["district_name", "gaul_district_code", "year", "season"]].isna().any().any()
+    assert not result[
+        ["nisr_district_code", "district_name", "gaul_district_code", "year", "season"]
+    ].isna().any().any()
