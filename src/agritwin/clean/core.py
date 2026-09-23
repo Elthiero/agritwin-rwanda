@@ -34,7 +34,10 @@ def resolve_ssf(value_labels: pd.DataFrame) -> dict[tuple[int, int], bool]:
     return {
         (int(year), int(code)): str(label).strip().lower().startswith("small scale")
         for year, code, label in zip(
-            farmer_type_labels["year"], farmer_type_labels["code"], farmer_type_labels["label"]
+            farmer_type_labels["year"],
+            farmer_type_labels["code"],
+            farmer_type_labels["label"],
+            strict=True,
         )
     }
 
