@@ -19,7 +19,6 @@ import ee
 from dotenv import load_dotenv
 
 from agritwin.gee.scaling import (
-    CHIRPS_SCALE,
     MODIS_NDVI_SCALE,
     isda_ph,
 )
@@ -89,7 +88,10 @@ def main() -> None:
     if raw_val is not None:
         print(f"  Mean pH over Rwanda (0-20cm), raw={raw_val:.1f}, real={isda_ph(raw_val):.2f}")
 
-    print("\nAll checks complete. If everything above says OK and you got numbers, you're good to build the pipeline.")
+    print(
+        "\nAll checks complete. If everything above says OK and you got numbers, "
+        "you're good to build the pipeline."
+    )
 
 
 if __name__ == "__main__":

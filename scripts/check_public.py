@@ -38,7 +38,8 @@ def staged_files() -> list[str]:
 def check_staged(errors: list[str]) -> None:
     for f in staged_files():
         p = Path(f)
-        if p.suffix.lower() in FORBIDDEN_EXT and not f.startswith(("tests/fixtures/", "api/tests/fixtures/")):
+        allowed_prefixes = ("tests/fixtures/", "api/tests/fixtures/")
+        if p.suffix.lower() in FORBIDDEN_EXT and not f.startswith(allowed_prefixes):
             errors.append(f"microdata file staged: {f}")
         elif p.suffix.lower() in DATA_EXT and not f.startswith(ALLOWED_DATA_DIRS):
             errors.append(f"data file outside allowed folders: {f}")
