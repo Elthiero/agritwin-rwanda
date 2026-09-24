@@ -89,6 +89,102 @@ def fetch_ndvi_district_stats(
     ).getInfo()
 
 
+def fetch_ndvi_peak_district_stats(
+    districts_fc: ee.FeatureCollection, start_date: str, end_date: str, scale_m: int
+) -> dict:
+    """Peak (max composite) MODIS NDVI per district over [start_date, end_date), for the
+    nowcast's "peak NDVI" feature -- distinct from fetch_ndvi_district_stats' mean
+    composite (used as a "cumulative greenness" proxy)."""
+    import ee
+
+    cfg = gee_dataset_config("modis_ndvi")
+    img = (
+        ee.ImageCollection(cfg["id"])
+        .filterDate(start_date, end_date)
+        .select("NDVI")
+        .max()
+        .multiply(MODIS_NDVI_SCALE)
+    )
+    return img.reduceRegions(
+        collection=districts_fc, reducer=ee.Reducer.mean(), scale=scale_m
+    ).getInfo()
+
+
+def _season_month_filter(start_month: int, end_month: int) -> ee.Filter:
+    """A recurring (every-year) calendar-month filter for one season window. Handles a
+    season that wraps across the year boundary (e.g. September to February)."""
+    import ee
+
+    if start_month <= end_month:
+        return ee.Filter.calendarRange(start_month, end_month, "month")
+    return ee.Filter.Or(
+        ee.Filter.calendarRange(start_month, 12, "month"),
+        ee.Filter.calendarRange(1, end_month, "month"),
+    )
+
+
+def fetch_ndvi_climatology_stats(
+    districts_fc: ee.FeatureCollection,
+    season: str,
+    season_windows: dict,
+    start_year: int,
+    end_year: int,
+    scale_m: int,
+) -> dict:
+    """Mean MODIS NDVI per district over every occurrence of this season's calendar
+    window across [start_year, end_year] (a recurring filter, not one long date range),
+    for the nowcast's NDVI-anomaly baseline. A season that wraps across the year boundary
+    (e.g. Sept-Feb) includes Jan/Feb of start_year and Sept-Dec of end_year at the edges,
+    a one-season boundary approximation judged negligible for an 18-year climatology.
+    """
+    import ee
+
+    cfg = gee_dataset_config("modis_ndvi")
+    window = season_windows[season]
+    img = (
+        ee.ImageCollection(cfg["id"])
+        .filter(ee.Filter.calendarRange(start_year, end_year, "year"))
+        .filter(_season_month_filter(window["start_month"], window["end_month"]))
+        .select("NDVI")
+        .mean()
+        .multiply(MODIS_NDVI_SCALE)
+    )
+    return img.reduceRegions(
+        collection=districts_fc, reducer=ee.Reducer.mean(), scale=scale_m
+    ).getInfo()
+
+
+def fetch_rainfall_climatology_stats(
+    districts_fc: ee.FeatureCollection,
+    season: str,
+    season_windows: dict,
+    start_year: int,
+    end_year: int,
+    scale_m: int,
+) -> dict:
+    """Mean seasonal total CHIRPS rainfall per district, averaged across every occurrence
+    of this season's calendar window in [start_year, end_year], for the nowcast's
+    rainfall-anomaly baseline. Summing every day across all years then dividing by the
+    number of years gives the average per-season total (not the average daily value)."""
+    import ee
+
+    cfg = gee_dataset_config("chirps_daily")
+    window = season_windows[season]
+    n_years = end_year - start_year + 1
+    img = (
+        ee.ImageCollection(cfg["id"])
+        .filter(ee.Filter.calendarRange(start_year, end_year, "year"))
+        .filter(_season_month_filter(window["start_month"], window["end_month"]))
+        .select("precipitation")
+        .sum()
+        .divide(n_years)
+        .multiply(CHIRPS_SCALE)
+    )
+    return img.reduceRegions(
+        collection=districts_fc, reducer=ee.Reducer.mean(), scale=scale_m
+    ).getInfo()
+
+
 def fetch_rainfall_district_stats(
     districts_fc: ee.FeatureCollection, start_date: str, end_date: str, scale_m: int
 ) -> dict:

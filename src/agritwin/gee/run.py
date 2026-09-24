@@ -19,12 +19,15 @@ from agritwin.gee.boundaries import (
 )
 from agritwin.gee.extract import (
     fetch_cropland_fraction_district_stats,
+    fetch_ndvi_climatology_stats,
     fetch_ndvi_district_stats,
+    fetch_ndvi_peak_district_stats,
+    fetch_rainfall_climatology_stats,
     fetch_rainfall_district_stats,
     fetch_soil_district_stats,
     parse_district_zonal_stats_hdx,
 )
-from agritwin.gee.periods import season_date_range
+from agritwin.gee.periods import partial_season_date_range, season_date_range
 
 DATA_EXTERNAL = Path(__file__).resolve().parents[3] / "data" / "external"
 
@@ -113,6 +116,90 @@ def run_soil() -> None:
     _write_csv(merged, "soil_district.csv")
 
 
+def run_climatology() -> None:
+    """Long-run NDVI and rainfall climatology per district x season, for the nowcast's
+    anomaly features (docs/AgriTwin_Master_Build_Guide.md section 4.3)."""
+    project_id = os.environ["GEE_PROJECT_ID"]
+    settings = load_settings()
+    districts_fc = hdx_districts_fc(project_id)
+    scale = settings["gee_extraction"]["scale_m"]
+    season_windows = settings["season_windows"]
+    nowcast_cfg = settings["nowcast"]
+    ndvi_start, ndvi_end = nowcast_cfg["ndvi_climatology"]
+    rain_start, rain_end = nowcast_cfg["rainfall_climatology"]
+
+    ndvi_rows, rain_rows = [], []
+    for season in settings["scope"]["seasons"]:
+        ndvi_fc = fetch_ndvi_climatology_stats(
+            districts_fc, season, season_windows, ndvi_start, ndvi_end, scale["ndvi"]
+        )
+        ndvi_df = parse_district_zonal_stats_hdx(
+            ndvi_fc, value_field="mean", value_col="ndvi_climatology_mean"
+        )
+        ndvi_df["season"] = season
+        ndvi_rows.append(ndvi_df)
+
+        rain_fc = fetch_rainfall_climatology_stats(
+            districts_fc, season, season_windows, rain_start, rain_end, scale["rainfall"]
+        )
+        rain_df = parse_district_zonal_stats_hdx(
+            rain_fc, value_field="mean", value_col="rainfall_climatology_mm"
+        )
+        rain_df["season"] = season
+        rain_rows.append(rain_df)
+
+    _write_csv(pd.concat(ndvi_rows, ignore_index=True), "ndvi_climatology_district.csv")
+    _write_csv(pd.concat(rain_rows, ignore_index=True), "rainfall_climatology_district.csv")
+
+
+def run_nowcast_features() -> None:
+    """Lead-time (partial-season) NDVI mean/peak and rainfall total per district x season
+    x year x lead_months, over settings.nowcast.lead_months."""
+    project_id = os.environ["GEE_PROJECT_ID"]
+    settings = load_settings()
+    districts_fc = hdx_districts_fc(project_id)
+    scale = settings["gee_extraction"]["scale_m"]
+    season_windows = settings["season_windows"]
+
+    rows = []
+    for year in settings["scope"]["years"]:
+        for season in settings["scope"]["seasons"]:
+            for lead_months in settings["nowcast"]["lead_months"]:
+                start_date, cutoff_date = partial_season_date_range(
+                    year, season, season_windows, lead_months
+                )
+
+                ndvi_mean_fc = fetch_ndvi_district_stats(
+                    districts_fc, start_date, cutoff_date, scale["ndvi"]
+                )
+                ndvi_mean_df = parse_district_zonal_stats_hdx(
+                    ndvi_mean_fc, value_field="mean", value_col="ndvi_mean"
+                )
+
+                ndvi_peak_fc = fetch_ndvi_peak_district_stats(
+                    districts_fc, start_date, cutoff_date, scale["ndvi"]
+                )
+                ndvi_peak_df = parse_district_zonal_stats_hdx(
+                    ndvi_peak_fc, value_field="mean", value_col="ndvi_peak"
+                )
+
+                rain_fc = fetch_rainfall_district_stats(
+                    districts_fc, start_date, cutoff_date, scale["rainfall"]
+                )
+                rain_df = parse_district_zonal_stats_hdx(
+                    rain_fc, value_field="mean", value_col="rainfall_mm"
+                )
+
+                merged = ndvi_mean_df.merge(
+                    ndvi_peak_df, on=["nisr_district_code", "district_name"]
+                ).merge(rain_df, on=["nisr_district_code", "district_name"])
+                merged["year"], merged["season"], merged["lead_months"] = year, season, lead_months
+                rows.append(merged)
+                logger.info(f"{year} {season} lead={lead_months}mo: {len(merged)} districts")
+
+    _write_csv(pd.concat(rows, ignore_index=True), "nowcast_features_district_season_year.csv")
+
+
 def _write_csv(df: pd.DataFrame, filename: str) -> None:
     output_dir = DATA_EXTERNAL / "gee"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -126,6 +213,8 @@ def main() -> None:
     run_ndvi_rainfall()
     run_cropland()
     run_soil()
+    run_climatology()
+    run_nowcast_features()
 
 
 if __name__ == "__main__":

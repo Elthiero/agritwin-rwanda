@@ -5,6 +5,9 @@ import inspect
 import pytest
 
 from agritwin.gee.extract import (
+    fetch_ndvi_climatology_stats,
+    fetch_ndvi_peak_district_stats,
+    fetch_rainfall_climatology_stats,
     fetch_rainfall_district_stats,
     parse_district_zonal_stats,
     parse_district_zonal_stats_hdx,
@@ -85,3 +88,30 @@ def test_rainfall_spatial_reducer_is_mean_not_sum():
     reduce_call = source.split("reduceRegions", 1)[1]
     assert "ee.Reducer.mean()" in reduce_call
     assert "ee.Reducer.sum()" not in reduce_call
+
+
+def test_ndvi_peak_uses_max_temporal_composite_not_mean():
+    source = inspect.getsource(fetch_ndvi_peak_district_stats)
+    composite_call = source.split(".select(", 1)[1]
+    assert ".max()" in composite_call
+    assert ".mean()" not in composite_call.split(".max()")[0]
+
+
+def test_rainfall_climatology_divides_by_number_of_years():
+    # Regression guard: summing every day across a multi-year recurring window without
+    # dividing by the number of years would return an N-year total, not the per-season
+    # average total the anomaly calculation needs.
+    source = inspect.getsource(fetch_rainfall_climatology_stats)
+    assert "n_years = end_year - start_year + 1" in source
+    assert ".sum()" in source
+    assert ".divide(n_years)" in source
+
+
+def test_ndvi_and_rainfall_climatology_use_calendar_range_not_filterdate():
+    # Regression guard: a plain filterDate(start, end) call would select one contiguous
+    # date range, not "this season's months, recurring every year in [start_year,
+    # end_year]" -- the whole point of a climatology.
+    for fn in (fetch_ndvi_climatology_stats, fetch_rainfall_climatology_stats):
+        source = inspect.getsource(fn)
+        assert "calendarRange" in source
+        assert "filterDate" not in source
