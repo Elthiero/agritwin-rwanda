@@ -58,6 +58,7 @@ drivers:
   cv: group_kfold_district
   n_splits: 5
   levers: [improved_seed, inorganic_fert, organic_fert, irrigated]
+  min_plots: 30    # same floor as survey.n_min; below this, a district's SHAP summary is "suppressed"
 
 nowcast:
   lead_months: [2, 3, 4]
