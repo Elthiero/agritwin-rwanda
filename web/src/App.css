@@ -300,6 +300,20 @@
   color: var(--terrace);
 }
 
+.district-panel-link {
+  display: block;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--terrace-line);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--forest-dark);
+}
+
+.district-panel-link:hover {
+  color: var(--forest);
+}
+
 /* ---------- footer ---------- */
 
 .footer-strip {

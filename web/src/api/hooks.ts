@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from './client'
-import type { Crop, DistrictProperties, Season, YieldGapRow } from './types'
+import type {
+  Crop,
+  DistrictProfile,
+  DistrictProperties,
+  NowcastRow,
+  ScenarioRow,
+  Season,
+  YieldGapRow,
+} from './types'
 import type { FeatureCollection, Geometry } from 'geojson'
 
 export type DistrictCollection = FeatureCollection<Geometry, DistrictProperties>
@@ -17,5 +25,28 @@ export function useYieldGap(crop: Crop, season: Season, year: number) {
   return useQuery({
     queryKey: ['yield-gap', crop, season, year],
     queryFn: () => apiGet<YieldGapRow[]>('/yield-gap', { crop, season, year }),
+  })
+}
+
+export function useDistrictProfile(code: number, crop: Crop, season: Season) {
+  return useQuery({
+    queryKey: ['district-profile', code, crop, season],
+    queryFn: () => apiGet<DistrictProfile>(`/districts/${code}/profile`, { crop, season }),
+  })
+}
+
+export function useScenario(code: number, crop: Crop, season: Season) {
+  return useQuery({
+    queryKey: ['scenario', code, crop, season],
+    queryFn: () => apiGet<ScenarioRow[]>(`/scenario/${code}`, { crop, season }),
+  })
+}
+
+// The API returns all districts for one crop x season x year x lead, matching
+// /yield-gap's shape; the caller filters to its own district, same as useYieldGap.
+export function useNowcast(crop: Crop, season: Season, year: number, lead: number) {
+  return useQuery({
+    queryKey: ['nowcast', crop, season, year, lead],
+    queryFn: () => apiGet<NowcastRow[]>('/nowcast', { crop, season, year, lead }),
   })
 }

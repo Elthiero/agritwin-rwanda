@@ -1,24 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useDistrictBoundaries, useYieldGap } from '../api/hooks'
 import type { Crop, Season, YieldGapRow } from '../api/types'
 import { RELIABILITY_GREY, yieldGapColor } from '../lib/colors'
 import { formatKgHa, formatPercent } from '../lib/format'
+import { CROPS, CROP_LABELS, MAX_YEAR, MIN_YEAR, SEASONS } from '../lib/constants'
 import Legend from '../components/Legend'
 
-const CROPS: Crop[] = ['maize', 'beans', 'irish_potato', 'sorghum']
-const CROP_LABELS: Record<Crop, string> = {
-  maize: 'Maize',
-  beans: 'Beans',
-  irish_potato: 'Irish potato',
-  sorghum: 'Sorghum',
-}
-const SEASONS: Season[] = ['A', 'B']
-const MIN_YEAR = 2019
-const MAX_YEAR = 2025
-
 interface SelectedDistrict {
+  code: number
   name: string
   row: YieldGapRow | null
 }
@@ -114,7 +106,7 @@ export default function MapPage() {
       if (!feature) return
       const code = feature.properties?.district_code as number
       const name = (feature.properties?.district_name as string) ?? `District ${code}`
-      setSelected({ name, row: byDistrict.get(code) ?? null })
+      setSelected({ code, name, row: byDistrict.get(code) ?? null })
     })
   }, [mapReady, boundaries.data, byDistrict])
 
@@ -240,6 +232,12 @@ export default function MapPage() {
                 No data for {CROP_LABELS[crop].toLowerCase()} in Season {season} {year} here.
               </p>
             )}
+            <Link
+              className="district-panel-link"
+              to={`/districts/${selected.code}?crop=${crop}&season=${season}&year=${year}`}
+            >
+              View full district profile
+            </Link>
           </div>
         )}
       </div>
