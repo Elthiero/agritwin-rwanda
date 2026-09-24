@@ -41,6 +41,7 @@ from agritwin.models.nowcast import (
 from agritwin.models.nowcast import (
     build_feature_table as build_nowcast_feature_table,
 )
+from agritwin.models.scenario import bootstrap_district_scenario
 
 DATA_STAGING = Path(__file__).resolve().parents[3] / "data" / "staging"
 DATA_MARTS = Path(__file__).resolve().parents[3] / "data" / "marts"
@@ -116,8 +117,10 @@ def run_drivers() -> None:
     soil = pd.read_csv(DATA_EXTERNAL / "gee" / "soil_district.csv")
     rainfall = pd.read_csv(DATA_EXTERNAL / "gee" / "rainfall_district_season.csv")
 
+    scenario_cfg = settings["scenario"]
+
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
-    global_rows, district_rows = [], []
+    global_rows, district_rows, scenario_rows = [], [], []
 
     for crop in settings["scope"]["crops"]:
         features_df = build_feature_table(plot_crop, soil, rainfall, crop)
@@ -154,6 +157,17 @@ def run_drivers() -> None:
         district_shap.insert(0, "crop", crop)
         district_rows.append(district_shap)
 
+        scenario = bootstrap_district_scenario(
+            model,
+            features_df,
+            levers=drivers_cfg["levers"],
+            n_reps=scenario_cfg["bootstrap_reps"],
+            min_plots=drivers_cfg["min_plots"],
+        )
+        scenario.insert(0, "crop", crop)
+        scenario_rows.append(scenario)
+        logger.info(f"{crop} scenario grid: {len(scenario)} rows")
+
     DATA_PUBLIC.mkdir(parents=True, exist_ok=True)
     if global_rows:
         pd.concat(global_rows, ignore_index=True).to_csv(DATA_PUBLIC / "drivers.csv", index=False)
@@ -161,6 +175,11 @@ def run_drivers() -> None:
             DATA_PUBLIC / "drivers_by_district.csv", index=False
         )
         logger.info("wrote drivers.csv and drivers_by_district.csv")
+    if scenario_rows:
+        pd.concat(scenario_rows, ignore_index=True).to_csv(
+            DATA_PUBLIC / "scenario.csv", index=False
+        )
+        logger.info("wrote scenario.csv")
 
 
 def run_nowcast() -> None:

@@ -157,7 +157,9 @@ def test_run_drivers_writes_artifacts_and_public_csvs(monkeypatch, tmp_path):
             "min_plots": 5,
             "target": "log_yield",
             "cv": "group_kfold_district",
+            "levers": ["improved_seed", "inorganic_fert"],
         },
+        "scenario": {"bootstrap_reps": 3},
         "project": {"data_version": "test"},
     }
 
@@ -181,6 +183,7 @@ def test_run_drivers_writes_artifacts_and_public_csvs(monkeypatch, tmp_path):
     assert (tmp_path / "artifacts" / "drivers_maize_metadata.json").exists()
     assert any("drivers.csv" in p for p in written)
     assert any("drivers_by_district.csv" in p for p in written)
+    assert any("scenario.csv" in p for p in written)
 
 
 def test_run_nowcast_writes_backtest_csv(monkeypatch):

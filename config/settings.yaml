@@ -69,6 +69,10 @@ nowcast:
   rainfall_climatology: [1991, 2020]
   ndvi_climatology: [2001, 2018]
 
+scenario:
+  bootstrap_reps: 100   # per district x lever configuration; smaller than survey.bootstrap_reps
+                        # (200) since this runs 16x per crop x district, not once
+
 validation:
   tolerance_pct: 10
 
