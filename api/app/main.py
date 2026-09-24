@@ -17,6 +17,7 @@ from api.app.routers import (
     geo,
     kpis,
     meta,
+    nowcast,
     scenario,
     yield_gap,
 )
@@ -52,6 +53,7 @@ def create_app() -> FastAPI:
     app.include_router(yield_gap.router, prefix="/api/v1", tags=["yield-gap"])
     app.include_router(drivers.router, prefix="/api/v1", tags=["drivers"])
     app.include_router(backtest.router, prefix="/api/v1", tags=["backtest"])
+    app.include_router(nowcast.router, prefix="/api/v1", tags=["nowcast"])
     app.include_router(meta.router, prefix="/api/v1", tags=["meta"])
     app.include_router(kpis.router, prefix="/api/v1", tags=["kpis"])
     app.include_router(districts.router, prefix="/api/v1", tags=["districts"])

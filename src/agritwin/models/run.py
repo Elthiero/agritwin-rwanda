@@ -33,9 +33,12 @@ from agritwin.models.drivers import (
 from agritwin.models.nowcast import (
     MODEL_NAMES,
     attach_lagged_yield,
+    best_model_per_lead,
+    build_curve_table,
     build_yield_lookup,
     exclude_low_reliability,
     leave_one_year_out_cv,
+    residual_std_by_model,
     summarize_cv,
 )
 from agritwin.models.nowcast import (
@@ -199,6 +202,7 @@ def run_nowcast() -> None:
     )
 
     backtest_rows = []
+    nowcast_rows = []
     for crop in settings["scope"]["crops"]:
         crop_lagged = lagged[lagged["crop"] == crop]
         for lead_months in nowcast_cfg["lead_months"]:
@@ -220,7 +224,7 @@ def run_nowcast() -> None:
                 logger.warning(f"{crop} lead={lead_months}mo: too little data, skipped")
                 continue
 
-            cv = leave_one_year_out_cv(features_df)
+            cv, predictions = leave_one_year_out_cv(features_df)
             if cv.empty:
                 logger.warning(f"{crop} lead={lead_months}mo: no valid CV folds, skipped")
                 continue
@@ -240,10 +244,66 @@ def run_nowcast() -> None:
                     }
                 )
 
+            # Serve real per-district early estimates using whichever model actually
+            # won this crop x lead time's backtest (often a naive baseline, per
+            # docs/decisions.md 2026-09-24), with a normal-approximation interval from
+            # that model's own out-of-fold residual spread.
+            best_model = best_model_per_lead(summary)
+            residual_std = residual_std_by_model(predictions).get(best_model, float("nan"))
+            best_predictions = predictions[predictions["model"] == best_model].copy()
+            best_predictions["crop"] = crop
+            best_predictions["lead_months"] = lead_months
+            best_predictions["model"] = best_model
+            best_predictions["ci_low"] = (
+                best_predictions["predicted_yield_kg_ha"] - 1.96 * residual_std
+            )
+            best_predictions["ci_high"] = (
+                best_predictions["predicted_yield_kg_ha"] + 1.96 * residual_std
+            )
+            best_predictions["is_backtest"] = True
+            nowcast_rows.append(best_predictions)
+
     DATA_PUBLIC.mkdir(parents=True, exist_ok=True)
     if backtest_rows:
         pd.DataFrame(backtest_rows).to_csv(DATA_PUBLIC / "nowcast_backtest.csv", index=False)
         logger.info(f"wrote nowcast_backtest.csv ({len(backtest_rows)} rows)")
+    if nowcast_rows:
+        nowcast_df = pd.concat(nowcast_rows, ignore_index=True)[
+            [
+                "district_code",
+                "crop",
+                "season",
+                "year",
+                "lead_months",
+                "model",
+                "predicted_yield_kg_ha",
+                "ci_low",
+                "ci_high",
+                "actual_yield_kg_ha",
+                "is_backtest",
+                "reliability",
+            ]
+        ]
+        nowcast_df.to_csv(DATA_PUBLIC / "nowcast.csv", index=False)
+        logger.info(f"wrote nowcast.csv ({len(nowcast_df)} rows)")
+
+    curve_df = build_curve_table(nowcast_features, ndvi_climatology, rainfall_climatology)
+    curve_df = curve_df[
+        [
+            "district_code",
+            "season",
+            "year",
+            "lead_months",
+            "ndvi_mean",
+            "ndvi_climatology_mean",
+            "ndvi_anomaly",
+            "rainfall_mm",
+            "rainfall_climatology_mm",
+            "rainfall_anomaly",
+        ]
+    ]
+    curve_df.to_csv(DATA_PUBLIC / "nowcast_curve.csv", index=False)
+    logger.info(f"wrote nowcast_curve.csv ({len(curve_df)} rows)")
 
 
 def main() -> None:

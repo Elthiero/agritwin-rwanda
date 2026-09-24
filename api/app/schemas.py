@@ -91,6 +91,50 @@ class BacktestRow(BaseModel):
     n_years_tested: int
 
 
+class NowcastRow(BaseModel):
+    """One district's early yield estimate for one crop x season x year x lead time,
+    from src/agritwin/models/nowcast.py's leave-one-year-out out-of-fold predictions.
+    `model` is whichever of the 4 candidates had the lowest backtest MAPE for this crop
+    x lead_months (see /backtest and data/public/nowcast_backtest.csv); per
+    docs/decisions.md 2026-09-24, that is often baseline_district_mean, not a fancier
+    model, and this field says which one was actually used. `ci_low`/`ci_high` are a
+    normal-approximation interval from that model's own backtest residual spread, per
+    CLAUDE.md golden rule 6. `is_backtest` is True for every row currently served: every
+    year here has a completed SAS survey, so this is 2019-2025 historical hold-out data,
+    not a live in-season prediction."""
+
+    district_code: int
+    crop: Crop
+    season: Season
+    year: int
+    lead_months: int
+    model: str
+    predicted_yield_kg_ha: float
+    ci_low: float
+    ci_high: float
+    actual_yield_kg_ha: float | None = None
+    is_backtest: bool
+    reliability: Reliability
+
+
+class NowcastCurveRow(BaseModel):
+    """District-level NDVI and CHIRPS rainfall signal at one lead time into a season,
+    against its own multi-year climatology (MODIS 2001-2018, CHIRPS 1991-2020), per
+    src/agritwin/models/nowcast.py's build_curve_table. Not crop-specific: the
+    satellite signal is the same regardless of which crop is grown in that district."""
+
+    district_code: int
+    season: Season
+    year: int
+    lead_months: int
+    ndvi_mean: float
+    ndvi_climatology_mean: float
+    ndvi_anomaly: float
+    rainfall_mm: float
+    rainfall_climatology_mm: float
+    rainfall_anomaly: float
+
+
 class KpiRow(BaseModel):
     """National-level yield estimate for one crop, for one season x year, per
     src/agritwin/survey/ (geo_level == "national"). One row per MVP crop, not a single

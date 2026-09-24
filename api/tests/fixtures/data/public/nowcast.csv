@@ -1,0 +1,5 @@
+district_code,crop,season,year,lead_months,model,predicted_yield_kg_ha,ci_low,ci_high,actual_yield_kg_ha,is_backtest,reliability
+11,maize,A,2023,3,baseline_district_mean,820.5,700.1,940.9,845.0,True,ok
+12,maize,A,2023,3,baseline_district_mean,790.2,670.0,910.4,780.5,True,ok
+11,maize,A,2024,3,baseline_district_mean,830.0,709.6,950.4,,False,ok
+11,beans,A,2023,3,ridge,410.0,360.2,459.8,405.0,True,use_with_caution

@@ -199,16 +199,22 @@ def _mae(actual: pd.Series, predicted: pd.Series) -> float:
 MODEL_NAMES = ("baseline_district_mean", "baseline_last_year", "ridge", "lgbm")
 
 
-def leave_one_year_out_cv(features_df: pd.DataFrame, min_train_rows: int = 20) -> pd.DataFrame:
-    """One row of metrics per held-out year: MAPE (on reconstructed actual yield) for
-    both naive baselines, ridge, and a small LightGBM. The historical mean used to build
-    target_anomaly and to reconstruct predicted actual yield is computed from the
+def leave_one_year_out_cv(
+    features_df: pd.DataFrame, min_train_rows: int = 20
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Returns (metrics, predictions). metrics has one row of MAPE/MAE per held-out year
+    for both naive baselines, ridge, and a small LightGBM. predictions has one row per
+    (held-out district x season x year x model), the same out-of-fold predictions the
+    metrics are computed from, reused by models/run.py to serve real per-district early
+    estimates rather than only aggregate backtest numbers. The historical mean used to
+    build target_anomaly and to reconstruct predicted actual yield is computed from the
     training years only, every fold, per CLAUDE.md's no-target-leakage rule.
     """
     from lightgbm import LGBMRegressor
     from sklearn.linear_model import Ridge
 
     rows = []
+    prediction_frames = []
     for held_out_year in sorted(features_df["year"].unique()):
         train = features_df[features_df["year"] != held_out_year].copy()
         test = features_df[features_df["year"] == held_out_year].copy()
@@ -256,8 +262,58 @@ def leave_one_year_out_cv(features_df: pd.DataFrame, min_train_rows: int = 20) -
         for model_name, pred in predictions.items():
             row[f"{model_name}_mape"] = _mape(test_actual, pred)
             row[f"{model_name}_mae_kg_ha"] = _mae(test_actual, pred)
+            fold_predictions = test[["district_code", "season", "year", "reliability"]].copy()
+            fold_predictions["model"] = model_name
+            fold_predictions["predicted_yield_kg_ha"] = pred.to_numpy()
+            fold_predictions["actual_yield_kg_ha"] = test_actual.to_numpy()
+            prediction_frames.append(fold_predictions)
         rows.append(row)
-    return pd.DataFrame(rows)
+    predictions_df = (
+        pd.concat(prediction_frames, ignore_index=True) if prediction_frames else pd.DataFrame()
+    )
+    return pd.DataFrame(rows), predictions_df
+
+
+def best_model_per_lead(summary: dict) -> str:
+    """The single candidate model (of MODEL_NAMES) with the lowest MAPE in this crop x
+    lead time's backtest summary, chosen honestly rather than always preferring a
+    fancier model: per docs/decisions.md 2026-09-24, baseline_district_mean wins most
+    crop x lead combinations, and the served nowcast should say so by actually using it,
+    not a LightGBM model dressed up as "the" early estimate."""
+    return min(MODEL_NAMES, key=lambda name: summary[f"{name}_mape"])
+
+
+def residual_std_by_model(predictions_df: pd.DataFrame) -> dict[str, float]:
+    """Sample standard deviation of (predicted - actual) out-of-fold residuals, per
+    model, across every held-out year and district. Used as a simple normal-approximation
+    prediction interval (pred +/- 1.96 * std) for the served nowcast: this is not a
+    bootstrap, but every number CLAUDE.md requires an interval, and the OOF residual
+    spread is the honest, already-computed source for one."""
+    resid = predictions_df["predicted_yield_kg_ha"] - predictions_df["actual_yield_kg_ha"]
+    result = predictions_df.assign(residual=resid).groupby("model")["residual"].std()
+    return result.to_dict()  # type: ignore[return-value]
+
+
+def build_curve_table(
+    nowcast_features: pd.DataFrame,
+    ndvi_climatology: pd.DataFrame,
+    rainfall_climatology: pd.DataFrame,
+) -> pd.DataFrame:
+    """District x season x year x lead_months NDVI/rainfall vs climatology, independent
+    of crop and of any model: the satellite signal is the same panel regardless of which
+    crop's nowcast is being served. Powers GET /nowcast/{code}/curve."""
+    merged = nowcast_features.merge(
+        ndvi_climatology[["nisr_district_code", "season", "ndvi_climatology_mean"]],
+        on=["nisr_district_code", "season"],
+        how="left",
+    ).merge(
+        rainfall_climatology[["nisr_district_code", "season", "rainfall_climatology_mm"]],
+        on=["nisr_district_code", "season"],
+        how="left",
+    )
+    merged["ndvi_anomaly"] = merged["ndvi_mean"] - merged["ndvi_climatology_mean"]
+    merged["rainfall_anomaly"] = merged["rainfall_mm"] - merged["rainfall_climatology_mm"]
+    return merged.rename(columns={"nisr_district_code": "district_code"})
 
 
 def summarize_cv(cv_results: pd.DataFrame) -> dict:

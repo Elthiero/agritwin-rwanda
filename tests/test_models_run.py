@@ -284,3 +284,33 @@ def test_run_nowcast_writes_backtest_csv(monkeypatch):
         "lgbm",
     }
     assert set(backtest["lead_months"]) == {2, 4}
+
+    assert any("nowcast_curve.csv" in p for p in written)
+    curve = next(df for p, df in written.items() if "nowcast_curve.csv" in p)
+    expected_curve_cols = {
+        "district_code",
+        "season",
+        "year",
+        "lead_months",
+        "ndvi_anomaly",
+        "rainfall_anomaly",
+    }
+    assert expected_curve_cols <= set(curve.columns)
+
+    nowcast_path = next(p for p in written if p.endswith("nowcast.csv"))
+    nowcast = written[nowcast_path]
+    expected_nowcast_cols = {
+        "district_code",
+        "crop",
+        "season",
+        "year",
+        "lead_months",
+        "model",
+        "predicted_yield_kg_ha",
+        "ci_low",
+        "ci_high",
+        "is_backtest",
+        "reliability",
+    }
+    assert expected_nowcast_cols <= set(nowcast.columns)
+    assert (nowcast["ci_high"] >= nowcast["ci_low"]).all()

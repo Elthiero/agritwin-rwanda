@@ -10,11 +10,14 @@ from agritwin.models.nowcast import (
     FEATURE_COLUMNS,
     attach_lagged_yield,
     attach_prior_season_for_lead,
+    best_model_per_lead,
+    build_curve_table,
     build_feature_table,
     build_yield_lookup,
     exclude_low_reliability,
     leave_one_year_out_cv,
     realistic_lookback_seasons,
+    residual_std_by_model,
     summarize_cv,
 )
 
@@ -186,6 +189,7 @@ def _synthetic_features_df(n_districts: int = 6, n_years: int = 5) -> pd.DataFra
                     "ndvi_anomaly": ndvi_anom,
                     "rainfall_mm": 400.0 + rainfall_anom,
                     "rainfall_anomaly": rainfall_anom,
+                    "reliability": "ok",
                 }
             )
     return pd.DataFrame(rows)
@@ -193,7 +197,7 @@ def _synthetic_features_df(n_districts: int = 6, n_years: int = 5) -> pd.DataFra
 
 def test_leave_one_year_out_cv_returns_one_row_per_held_out_year():
     features = _synthetic_features_df(n_districts=6, n_years=5)
-    cv = leave_one_year_out_cv(features, min_train_rows=10)
+    cv, predictions = leave_one_year_out_cv(features, min_train_rows=10)
     assert set(cv["held_out_year"]) == set(range(2020, 2025))
     assert {
         "baseline_district_mean_mape",
@@ -205,11 +209,84 @@ def test_leave_one_year_out_cv_returns_one_row_per_held_out_year():
 
 def test_leave_one_year_out_cv_all_mape_and_mae_values_are_finite_and_non_negative():
     features = _synthetic_features_df(n_districts=6, n_years=5)
-    cv = leave_one_year_out_cv(features, min_train_rows=10)
+    cv, predictions = leave_one_year_out_cv(features, min_train_rows=10)
     for model_name in ("baseline_district_mean", "baseline_last_year", "ridge", "lgbm"):
         for col in (f"{model_name}_mape", f"{model_name}_mae_kg_ha"):
             assert (cv[col] >= 0).all()
             assert cv[col].notna().all()
+
+
+def test_leave_one_year_out_cv_predictions_cover_every_model_and_row():
+    features = _synthetic_features_df(n_districts=6, n_years=5)
+    cv, predictions = leave_one_year_out_cv(features, min_train_rows=10)
+    assert set(predictions["model"]) == {
+        "baseline_district_mean",
+        "baseline_last_year",
+        "ridge",
+        "lgbm",
+    }
+    # Every held-out row appears once per model.
+    assert len(predictions) == cv["n_test_rows"].sum() * 4
+    expected_cols = {
+        "district_code",
+        "season",
+        "year",
+        "reliability",
+        "predicted_yield_kg_ha",
+        "actual_yield_kg_ha",
+    }
+    assert expected_cols <= set(predictions.columns)
+
+
+def test_best_model_per_lead_picks_the_lowest_mape():
+    summary = {
+        "baseline_district_mean_mape": 20.0,
+        "baseline_last_year_mape": 30.0,
+        "ridge_mape": 15.0,
+        "lgbm_mape": 25.0,
+    }
+    assert best_model_per_lead(summary) == "ridge"
+
+
+def test_residual_std_by_model_is_zero_for_perfect_predictions():
+    predictions = pd.DataFrame(
+        [
+            {"model": "ridge", "predicted_yield_kg_ha": 100.0, "actual_yield_kg_ha": 100.0},
+            {"model": "ridge", "predicted_yield_kg_ha": 100.0, "actual_yield_kg_ha": 100.0},
+            {"model": "lgbm", "predicted_yield_kg_ha": 110.0, "actual_yield_kg_ha": 90.0},
+            {"model": "lgbm", "predicted_yield_kg_ha": 90.0, "actual_yield_kg_ha": 110.0},
+        ]
+    )
+    result = residual_std_by_model(predictions)
+    assert result["ridge"] == pytest.approx(0.0)
+    assert result["lgbm"] > 0.0
+
+
+def test_build_curve_table_computes_anomalies_and_keeps_full_panel():
+    nowcast_features = pd.DataFrame(
+        [
+            {
+                "nisr_district_code": 11.0,
+                "season": "A",
+                "year": 2024,
+                "lead_months": 2,
+                "ndvi_mean": 0.55,
+                "ndvi_peak": 0.7,
+                "rainfall_mm": 400.0,
+            }
+        ]
+    )
+    ndvi_clim = pd.DataFrame(
+        [{"nisr_district_code": 11.0, "season": "A", "ndvi_climatology_mean": 0.50}]
+    )
+    rain_clim = pd.DataFrame(
+        [{"nisr_district_code": 11.0, "season": "A", "rainfall_climatology_mm": 450.0}]
+    )
+    curve = build_curve_table(nowcast_features, ndvi_clim, rain_clim)
+    assert len(curve) == 1
+    assert curve.iloc[0]["district_code"] == 11.0
+    assert curve.iloc[0]["ndvi_anomaly"] == pytest.approx(0.05)
+    assert curve.iloc[0]["rainfall_anomaly"] == pytest.approx(-50.0)
 
 
 def _cv_fold_row(**overrides) -> dict:
@@ -268,7 +345,7 @@ def test_leave_one_year_out_cv_handles_all_missing_feature_column_without_crashi
     # crash Ridge.fit via median()->NaN->fillna(NaN) being a no-op.
     features = _synthetic_features_df(n_districts=6, n_years=5)
     features["prior_season_yield_kg_ha"] = np.nan
-    cv = leave_one_year_out_cv(features, min_train_rows=10)
+    cv, predictions = leave_one_year_out_cv(features, min_train_rows=10)
     assert not cv.empty
     assert cv["ridge_mape"].notna().all()
 

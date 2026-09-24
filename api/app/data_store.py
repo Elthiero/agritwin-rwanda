@@ -30,6 +30,8 @@ class DataStore:
         self.district_yield: pd.DataFrame | None = None
         self.district_zones: pd.DataFrame | None = None
         self.scenario: pd.DataFrame | None = None
+        self.nowcast: pd.DataFrame | None = None
+        self.nowcast_curve: pd.DataFrame | None = None
         self.last_updated: str | None = None
 
     def _load_public_csv(self, filename: str) -> pd.DataFrame | None:
@@ -79,6 +81,8 @@ class DataStore:
         self.district_yield = self._load_public_csv("district_yield.csv")
         self.district_zones = self._load_public_csv("district_zones.csv")
         self.scenario = self._load_public_csv("scenario.csv")
+        self.nowcast = self._load_public_csv("nowcast.csv")
+        self.nowcast_curve = self._load_public_csv("nowcast_curve.csv")
 
         public_dir = get_settings().DATA_DIR / "public"
         mtimes = (
@@ -98,6 +102,8 @@ class DataStore:
         self.district_yield = None
         self.district_zones = None
         self.scenario = None
+        self.nowcast = None
+        self.nowcast_curve = None
         self.last_updated = None
 
     def district_name(self, district_code: int) -> str | None:
