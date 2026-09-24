@@ -24,4 +24,5 @@ export interface YieldGapRow {
 export interface DistrictProperties {
   district_name: string
   gaul_district_code: number
+  district_code: number
 }

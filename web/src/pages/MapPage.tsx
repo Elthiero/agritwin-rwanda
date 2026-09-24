@@ -4,7 +4,6 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useDistrictBoundaries, useYieldGap } from '../api/hooks'
 import type { Crop, Season, YieldGapRow } from '../api/types'
 import { RELIABILITY_GREY, yieldGapColor } from '../lib/colors'
-import { NISR_TO_GAUL } from '../lib/districtCrosswalk'
 import { formatKgHa, formatPercent } from '../lib/format'
 
 const CROPS: Crop[] = ['maize', 'beans', 'irish_potato', 'sorghum']
@@ -26,8 +25,7 @@ export default function MapPage() {
   const byDistrict = useMemo(() => {
     const rows = new Map<number, YieldGapRow>()
     for (const row of yieldGap.data ?? []) {
-      const gaulCode = NISR_TO_GAUL[row.district_code]
-      if (gaulCode != null) rows.set(gaulCode, row)
+      rows.set(row.district_code, row)
     }
     return rows
   }, [yieldGap.data])
@@ -54,7 +52,7 @@ export default function MapPage() {
     const withColor = {
       ...boundaries.data,
       features: boundaries.data.features.map((f) => {
-        const row = byDistrict.get(f.properties.gaul_district_code)
+        const row = byDistrict.get(f.properties.district_code)
         const color =
           row && row.reliability !== 'suppressed' && row.yield_gap_pct != null
             ? yieldGapColor(row.yield_gap_pct)
@@ -86,7 +84,7 @@ export default function MapPage() {
     m.on('mousemove', 'districts-fill', (e) => {
       const feature = e.features?.[0]
       if (!feature) return
-      const code = feature.properties?.gaul_district_code as number
+      const code = feature.properties?.district_code as number
       setHovered(byDistrict.get(code) ?? null)
       m.getCanvas().style.cursor = 'pointer'
     })

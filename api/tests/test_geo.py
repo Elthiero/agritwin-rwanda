@@ -17,6 +17,17 @@ def test_get_districts():
         assert all(f["properties"]["district_name"] for f in data["features"])
         assert all(f["properties"]["gaul_district_code"] for f in data["features"])
         assert all(f["geometry"] for f in data["features"])
+
+        # district_code (NISR) is joined onto each feature so consumers can match this
+        # response against /yield-gap, /drivers, /backtest etc, which key by NISR code,
+        # not gaul_district_code.
+        codes = [f["properties"].get("district_code") for f in data["features"]]
+        assert all(codes)
+        assert len(set(codes)) == 30
+        bugesera = next(
+            f for f in data["features"] if f["properties"]["district_name"] == "Bugesera"
+        )
+        assert bugesera["properties"]["district_code"] == 57
         valid_types = ["Polygon", "MultiPolygon", "GeometryCollection"]
         assert all(f["geometry"]["type"] in valid_types for f in data["features"])
 

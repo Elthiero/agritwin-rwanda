@@ -104,7 +104,11 @@ class GeoJSONResponse(BaseModel):
                 "features": [
                     {
                         "type": "Feature",
-                        "properties": {"district_name": "Kigali", "gaul_district_code": 1},
+                        "properties": {
+                            "district_name": "Kigali",
+                            "gaul_district_code": 1,
+                            "district_code": 12,
+                        },
                         "geometry": {
                             "type": "Polygon",
                             "coordinates": [[[29.0, -2.0], [29.1, -2.0]]],
