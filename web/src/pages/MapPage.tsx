@@ -5,15 +5,29 @@ import { useDistrictBoundaries, useYieldGap } from '../api/hooks'
 import type { Crop, Season, YieldGapRow } from '../api/types'
 import { RELIABILITY_GREY, yieldGapColor } from '../lib/colors'
 import { formatKgHa, formatPercent } from '../lib/format'
+import Legend from '../components/Legend'
 
 const CROPS: Crop[] = ['maize', 'beans', 'irish_potato', 'sorghum']
+const CROP_LABELS: Record<Crop, string> = {
+  maize: 'Maize',
+  beans: 'Beans',
+  irish_potato: 'Irish potato',
+  sorghum: 'Sorghum',
+}
 const SEASONS: Season[] = ['A', 'B']
+const MIN_YEAR = 2019
+const MAX_YEAR = 2025
+
+interface SelectedDistrict {
+  name: string
+  row: YieldGapRow | null
+}
 
 export default function MapPage() {
   const [crop, setCrop] = useState<Crop>('beans')
   const [season, setSeason] = useState<Season>('B')
   const [year, setYear] = useState(2025)
-  const [hovered, setHovered] = useState<YieldGapRow | null>(null)
+  const [selected, setSelected] = useState<SelectedDistrict | null>(null)
 
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
@@ -34,9 +48,17 @@ export default function MapPage() {
     if (!mapContainer.current) return
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'https://demotiles.maplibre.org/style.json',
+      // A plain background, not an external tile style: web/CLAUDE.md is explicit that
+      // no basemap tiles are required, and district polygons carry all the information
+      // this map needs to show.
+      style: {
+        version: 8,
+        sources: {},
+        layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#dde1d1' } }],
+      },
       center: [29.9, -1.95],
       zoom: 8,
+      attributionControl: false,
     })
     map.current.on('load', () => setMapReady(true))
     return () => {
@@ -72,25 +94,27 @@ export default function MapPage() {
       id: 'districts-fill',
       type: 'fill',
       source: 'districts',
-      paint: { 'fill-color': ['get', 'fillColor'], 'fill-opacity': 0.75 },
+      paint: { 'fill-color': ['get', 'fillColor'], 'fill-opacity': 0.8 },
     })
     m.addLayer({
       id: 'districts-outline',
       type: 'line',
       source: 'districts',
-      paint: { 'line-color': '#333', 'line-width': 1 },
+      paint: { 'line-color': '#f6f6f0', 'line-width': 1 },
     })
 
-    m.on('mousemove', 'districts-fill', (e) => {
-      const feature = e.features?.[0]
-      if (!feature) return
-      const code = feature.properties?.district_code as number
-      setHovered(byDistrict.get(code) ?? null)
+    m.on('mousemove', 'districts-fill', () => {
       m.getCanvas().style.cursor = 'pointer'
     })
     m.on('mouseleave', 'districts-fill', () => {
-      setHovered(null)
       m.getCanvas().style.cursor = ''
+    })
+    m.on('click', 'districts-fill', (e) => {
+      const feature = e.features?.[0]
+      if (!feature) return
+      const code = feature.properties?.district_code as number
+      const name = (feature.properties?.district_name as string) ?? `District ${code}`
+      setSelected({ name, row: byDistrict.get(code) ?? null })
     })
   }, [mapReady, boundaries.data, byDistrict])
 
@@ -98,58 +122,131 @@ export default function MapPage() {
   const error = boundaries.error || yieldGap.error
 
   return (
-    <div className="map-page">
-      <div className="filter-bar" role="toolbar" aria-label="Filters">
-        <label>
-          Crop
-          <select value={crop} onChange={(e) => setCrop(e.target.value as Crop)}>
+    <div className="shell">
+      <header className="masthead">
+        <h1>AgriTwin Rwanda</h1>
+        <p>Actual yield versus the modeled attainable yield, by district.</p>
+      </header>
+
+      <div className="controls" role="toolbar" aria-label="Filters">
+        <div className="control-group">
+          <span className="control-label" id="crop-label">
+            Crop
+          </span>
+          <div className="tab-set" role="group" aria-labelledby="crop-label">
             {CROPS.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
+              <button
+                key={c}
+                type="button"
+                aria-pressed={crop === c}
+                onClick={() => setCrop(c)}
+              >
+                {CROP_LABELS[c]}
+              </button>
             ))}
-          </select>
-        </label>
-        <label>
-          Season
-          <select value={season} onChange={(e) => setSeason(e.target.value as Season)}>
+          </div>
+        </div>
+
+        <div className="control-group">
+          <span className="control-label" id="season-label">
+            Season
+          </span>
+          <div className="tab-set" role="group" aria-labelledby="season-label">
             {SEASONS.map((s) => (
-              <option key={s} value={s}>
+              <button
+                key={s}
+                type="button"
+                aria-pressed={season === s}
+                onClick={() => setSeason(s)}
+              >
                 {s}
-              </option>
+              </button>
             ))}
-          </select>
-        </label>
-        <label>
-          Year
-          <input
-            type="number"
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            min={2019}
-            max={2025}
-          />
-        </label>
+          </div>
+        </div>
+
+        <div className="control-group">
+          <span className="control-label" id="year-label">
+            Year
+          </span>
+          <div className="stepper" role="group" aria-labelledby="year-label">
+            <button
+              type="button"
+              aria-label="Previous year"
+              disabled={year <= MIN_YEAR}
+              onClick={() => setYear((y) => Math.max(MIN_YEAR, y - 1))}
+            >
+              −
+            </button>
+            <span className="year-value">{year}</span>
+            <button
+              type="button"
+              aria-label="Next year"
+              disabled={year >= MAX_YEAR}
+              onClick={() => setYear((y) => Math.min(MAX_YEAR, y + 1))}
+            >
+              +
+            </button>
+          </div>
+        </div>
       </div>
 
       <p className="model-badge">Model-based estimate, not official statistics</p>
 
-      {loading && <p>Loading...</p>}
-      {error && <p className="error">Error: {error instanceof Error ? error.message : String(error)}</p>}
-
-      <div ref={mapContainer} className="map" />
-
-      {hovered && (
-        <div className="district-tooltip">
-          <strong>District {hovered.district_code}</strong>
-          <div>Actual yield: {formatKgHa(hovered.actual_yield_kg_ha)}</div>
-          <div>Attainable yield: {formatKgHa(hovered.attainable_yield_kg_ha)}</div>
-          <div>Yield gap: {formatPercent(hovered.yield_gap_pct)}</div>
-          {hovered.reliability !== 'ok' && (
-            <div className="reliability-note">Reliability: {hovered.reliability.replace(/_/g, ' ')}</div>
-          )}
-        </div>
+      {loading && <p className="status-line">Loading district data…</p>}
+      {error && (
+        <p className="status-line error">
+          Could not load this view: {error instanceof Error ? error.message : String(error)}
+        </p>
       )}
+
+      <div className="map-area">
+        <div ref={mapContainer} className="map" />
+        <Legend />
+
+        {selected && (
+          <div className="district-panel" role="dialog" aria-label={`${selected.name} detail`}>
+            <div className="district-panel-header">
+              <h2>{selected.name}</h2>
+              <button
+                type="button"
+                className="district-panel-close"
+                aria-label="Close district detail"
+                onClick={() => setSelected(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            {selected.row ? (
+              <>
+                <dl>
+                  <dt>Actual yield</dt>
+                  <dd>{formatKgHa(selected.row.actual_yield_kg_ha)}</dd>
+                  <dt>Attainable yield</dt>
+                  <dd>{formatKgHa(selected.row.attainable_yield_kg_ha)}</dd>
+                  <dt>Yield gap</dt>
+                  <dd>{formatPercent(selected.row.yield_gap_pct)}</dd>
+                </dl>
+                {selected.row.reliability !== 'ok' && (
+                  <p className="reliability-note">
+                    Reliability: {selected.row.reliability.replace(/_/g, ' ')}. Too few
+                    surveyed plots for a precise estimate.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="district-panel-hint">
+                No data for {CROP_LABELS[crop].toLowerCase()} in Season {season} {year} here.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      <footer className="footer-strip">
+        AgriTwin Rwanda. NISR 2026 Big Data Hackathon. Not official NISR statistics.
+      </footer>
     </div>
   )
 }
