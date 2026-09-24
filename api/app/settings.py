@@ -13,7 +13,9 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    DATA_DIR: Path = Path(__file__).resolve().parents[2] / "data" / "public"
+    # The repo's data/ root (matches .env.example's DATA_DIR=./data), not data/public/
+    # directly: consumers append the subfolder they need (public/, external/, ...).
+    DATA_DIR: Path = Path(__file__).resolve().parents[2] / "data"
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:5173",
         "http://localhost:3000",

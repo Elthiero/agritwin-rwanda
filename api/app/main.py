@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from api.app.data_store import data_store
-from api.app.routers import geo
+from api.app.routers import geo, yield_gap
 from api.app.settings import get_settings
 
 
@@ -39,6 +39,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(geo.router, prefix="/api/v1", tags=["geo"])
+    app.include_router(yield_gap.router, prefix="/api/v1", tags=["yield-gap"])
     return app
 
 
