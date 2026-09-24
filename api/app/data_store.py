@@ -21,6 +21,18 @@ class DataStore:
     def __init__(self):
         self.districts_geojson: dict | None = None
         self.yield_gap: pd.DataFrame | None = None
+        self.drivers: pd.DataFrame | None = None
+        self.drivers_by_district: pd.DataFrame | None = None
+        self.backtest: pd.DataFrame | None = None
+
+    def _load_public_csv(self, filename: str) -> pd.DataFrame | None:
+        path = get_settings().DATA_DIR / "public" / filename
+        if not path.exists():
+            logger.warning(f"{filename} not found at {path}")
+            return None
+        df = pd.read_csv(path)
+        logger.info(f"loaded {len(df)} rows from {filename}")
+        return df
 
     def load(self) -> None:
         """Load all data into memory on startup."""
@@ -32,17 +44,18 @@ class DataStore:
         else:
             logger.warning(f"districts GeoJSON not found at {geojson_path}")
 
-        yield_gap_path = get_settings().DATA_DIR / "public" / "yield_gap.csv"
-        if yield_gap_path.exists():
-            self.yield_gap = pd.read_csv(yield_gap_path)
-            logger.info(f"loaded {len(self.yield_gap)} yield_gap rows")
-        else:
-            logger.warning(f"yield_gap.csv not found at {yield_gap_path}")
+        self.yield_gap = self._load_public_csv("yield_gap.csv")
+        self.drivers = self._load_public_csv("drivers.csv")
+        self.drivers_by_district = self._load_public_csv("drivers_by_district.csv")
+        self.backtest = self._load_public_csv("nowcast_backtest.csv")
 
     def clear(self) -> None:
         """Clear data on shutdown."""
         self.districts_geojson = None
         self.yield_gap = None
+        self.drivers = None
+        self.drivers_by_district = None
+        self.backtest = None
 
 
 data_store = DataStore()

@@ -1,0 +1,4 @@
+crop,lead_months,model,mape_pct,mape_std_across_years,mae_kg_ha,n_years_tested
+maize,2,baseline_district_mean,28.36,13.54,356.36,7
+maize,2,ridge,28.74,13.82,360.50,7
+beans,4,ridge,20.22,9.75,112.36,7

@@ -1,0 +1,5 @@
+crop,district_code,feature,mean_abs_shap,direction,n_plots,reliability
+maize,11.0,improved_seed,0.11,negative,15,suppressed
+maize,11.0,soil_ph,0.09,positive,15,suppressed
+maize,12.0,soil_ph,0.21,positive,40,ok
+beans,11.0,improved_seed,0.08,positive,30,ok

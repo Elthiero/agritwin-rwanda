@@ -1,0 +1,5 @@
+crop,feature,mean_abs_shap,direction
+maize,soil_ph,0.19,positive
+maize,inorganic_fert,0.17,positive
+maize,rainfall_mm,0.14,negative
+beans,improved_seed,0.10,positive

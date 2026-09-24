@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from api.app.data_store import data_store
-from api.app.routers import geo, yield_gap
+from api.app.routers import backtest, drivers, geo, yield_gap
 from api.app.settings import get_settings
 
 
@@ -40,6 +40,8 @@ def create_app() -> FastAPI:
     )
     app.include_router(geo.router, prefix="/api/v1", tags=["geo"])
     app.include_router(yield_gap.router, prefix="/api/v1", tags=["yield-gap"])
+    app.include_router(drivers.router, prefix="/api/v1", tags=["drivers"])
+    app.include_router(backtest.router, prefix="/api/v1", tags=["backtest"])
     return app
 
 
