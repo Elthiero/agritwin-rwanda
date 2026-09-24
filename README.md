@@ -34,7 +34,7 @@ AgriTwin combines NISR's Seasonal Agricultural Survey microdata with satellite a
 1. **Yield gap engine.** Estimates attainable yield (the top-performing farmers under comparable agro-ecological conditions) and shows the gap for each crop, district, and season, with a confidence interval.
 2. **Driver engine.** Uses an explainable model (LightGBM + SHAP) to show which factors, improved seed, fertilizer, irrigation, erosion control, plot size, rainfall, soil, are most associated with higher yield in each district. Presented as association, never as a causal claim.
 3. **Early estimate engine (nowcast).** Combines satellite vegetation signals (NDVI) and rainfall data during the growing season to produce a district-level yield estimate before the official SAS results are published, validated against a historical backtest.
-4. **Scenario explorer.** Lets a user ask "what would happen to the model's yield estimate if improved seed adoption in this district rose from X% to Y%", clearly labeled as a model-based estimate rather than a policy guarantee.
+4. **Scenario explorer (planned, not yet built).** Will let a user ask "what would happen to the model's yield estimate if improved seed adoption in this district rose from X% to Y%", clearly labeled as a model-based estimate rather than a policy guarantee.
 
 Every number shown in the app carries a confidence interval or an explicit reliability flag. Nothing below district level is ever shown, and no individual farmer or plot data leaves the pipeline.
 
@@ -46,7 +46,7 @@ Every number shown in the app carries a confidence interval or an explicit relia
 | Satellite and climate data | Google Earth Engine (MODIS NDVI, Sentinel-2, CHIRPS, ESA WorldCover, iSDAsoil, SRTM) |
 | Modelling | scikit-learn, LightGBM, SHAP, samplics (survey-weighted estimation) |
 | API | FastAPI, Pydantic, serving precomputed Parquet/JSON, no live database |
-| Web app | React 18, Vite, TypeScript, MapLibre GL JS, ECharts, Tailwind CSS, react-i18next (English, French, Kinyarwanda) |
+| Web app | React 18, Vite, TypeScript, MapLibre GL JS, ECharts, Tailwind CSS, react-i18next (English, French, Kinyarwanda; not yet wired into any page) |
 | Documentation | MkDocs Material, deployed to GitHub Pages |
 | Containerization | Docker, Docker Compose |
 
@@ -114,10 +114,10 @@ data/raw/ahs/2024/
 ### Run the pipeline
 
 ```bash
-make ingest stage marts    # process NISR microdata
+make stage clean marts     # harmonize, clean, and survey-weight NISR microdata
 make gee                   # pull satellite and climate features
 make features train        # build model features and train models
-make export                # produce the aggregated, public-safe outputs
+make export                # produce the aggregated, public-safe outputs (not yet built)
 ```
 
 ### Run the app locally
@@ -144,7 +144,41 @@ This starts the API and web app together, reading from `data/public/`.
 
 ## Methodology and validation
 
-Every population-level estimate uses the SAS survey weights and design (strata and primary sampling units), never a simple average. Model outputs are always shown as associations or predictions, never as causal claims. Yield gap and driver models are validated with district-grouped cross-validation; the seasonal nowcast is validated with a leave-one-year-out backtest against naive baselines. Full methodology, validation results, and known limitations are documented on the project's methodology page and in `docs/`.
+Every population-level estimate uses the SAS survey weights and design (strata and primary sampling units), never a simple average. Model outputs are always shown as associations or predictions, never as causal claims. The driver model is validated with district-grouped cross-validation; the seasonal nowcast is validated with a leave-one-year-out backtest against two naive baselines. A live, in-app methodology page is planned but not yet built; the full methodology, decisions, and known limitations are documented in `docs/` (`docs/decisions.md`, `docs/survey-design.md`, `docs/validation.md`, `docs/nowcast-feature-timing.md`).
+
+### Validation results
+
+Pulled directly from the committed data files below, not invented or rounded favorably.
+
+**1. Survey-weighted yield vs. the official NISR report** (`docs/validation.md`): national maize yield, Season B 2025.
+
+| | Official (NISR SAS 2025B report, Table 6) | AgriTwin (survey-weighted, pure-stand plots) |
+|---|---|---|
+| Yield | 1,300 kg/ha | 1,400 kg/ha (95% CI 1,090-1,710, n=240 plots) |
+
+7.7% relative difference, well inside our own confidence interval. Production and cultivated-area totals diverge by roughly 4-5x by design, not error: the official figures allocate intercropped plots' area by crop share, which AgriTwin's plot-level harvest data cannot do (see `docs/validation.md` for the full explanation).
+
+**2. Driver model (LightGBM + SHAP), CV score vs. a naive baseline**, per crop (`artifacts/drivers_{crop}_metadata.json`):
+
+| Crop | Improvement over baseline |
+|---|---|
+| irish_potato | +20.0% |
+| beans | +5.4% |
+| maize | +5.0% |
+| sorghum | **-4.4% (worse than baseline)** |
+
+Sorghum's driver model does not beat a naive baseline. Reported here plainly rather than omitted; see `docs/decisions.md` (2026-09-24) for why this was not tuned away.
+
+**3. Nowcast backtest** (`data/public/nowcast_backtest.csv`), after four rounds of external-review fixes (see `docs/decisions.md` 2026-09-24 for all four): a Season A satellite date-alignment bug, prior-season-yield leakage, exclusion of low-reliability cells, and a rigorous per-fold spread check across the 7 held-out years, not just a point estimate.
+
+| Crop | Best model | Mean improvement over baseline | Std across 7 years | Consistent direction? |
+|---|---|---|---|---|
+| sorghum | LightGBM, lead=2mo | +3.2 pp MAPE | 4.4 pp | Yes, wins 6 of 7 years |
+| beans | Ridge, lead=4mo | +0.5 pp MAPE | 0.6 pp | Yes, wins 5 of 7 years |
+| irish_potato | Ridge, lead=4mo | +0.2 pp MAPE | 1.0 pp | No, wins 3 of 6 years |
+| maize | none | none beats baseline | n/a | No, wins 2 of 7 years |
+
+**Plain verdict**: no crop beats the naive "predict the district's historical average" baseline by a margin large relative to the year-to-year spread. Sorghum and beans show a directionally consistent, real but modest and noisy edge; maize and irish potato do not show a reliable improvement. This should not be presented as "the nowcast beats the naive estimate" without that caveat.
 
 ## Data privacy
 
