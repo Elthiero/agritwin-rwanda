@@ -12,6 +12,7 @@ from agritwin.models.nowcast import (
     attach_prior_season_for_lead,
     build_feature_table,
     build_yield_lookup,
+    exclude_low_reliability,
     leave_one_year_out_cv,
     realistic_lookback_seasons,
     summarize_cv,
@@ -257,3 +258,28 @@ def test_leave_one_year_out_cv_handles_all_missing_feature_column_without_crashi
     cv = leave_one_year_out_cv(features, min_train_rows=10)
     assert not cv.empty
     assert cv["ridge_mape"].notna().all()
+
+
+def test_exclude_low_reliability_drops_only_suppressed_rows():
+    features = pd.DataFrame(
+        [
+            {"reliability": "ok", "yield_kg_ha": 800.0},
+            {"reliability": "use_with_caution", "yield_kg_ha": 900.0},
+            {"reliability": "suppressed", "yield_kg_ha": 1000.0},
+        ]
+    )
+    result = exclude_low_reliability(features)
+    assert set(result["reliability"]) == {"ok", "use_with_caution"}
+    assert len(result) == 2
+
+
+def test_exclude_low_reliability_does_not_mutate_the_input():
+    features = pd.DataFrame(
+        [
+            {"reliability": "ok", "yield_kg_ha": 800.0},
+            {"reliability": "suppressed", "yield_kg_ha": 1000.0},
+        ]
+    )
+    original_len = len(features)
+    exclude_low_reliability(features)
+    assert len(features) == original_len

@@ -165,6 +165,20 @@ def build_feature_table(
     return merged
 
 
+def exclude_low_reliability(features_df: pd.DataFrame) -> pd.DataFrame:
+    """Drops "suppressed" rows (fewer than survey/'s min_segments, see
+    src/agritwin/survey/core.py's add_reliability_flag) from both training and
+    evaluation: per docs/decisions.md 2026-09-24, a cell resting on too few plots is
+    survey noise, not a learnable signal, for either purpose. "use_with_caution" rows
+    (elevated CV, but still meeting the minimum segment floor) are kept: a small
+    minority per crop, not worth separate handling. prior_season_yield_kg_ha is
+    unaffected by this filter: it is computed upstream from the full unfiltered table
+    (see build_yield_lookup), since it is an input feature representing the best
+    information a real forecaster would have had, not the target being modeled.
+    """
+    return features_df[features_df["reliability"] != "suppressed"].copy()
+
+
 def _mape(actual: pd.Series, predicted: pd.Series) -> float:
     """Mean absolute percentage error, excluding rows where actual is 0 (MAPE is
     undefined there, not a large-but-valid number)."""

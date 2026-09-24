@@ -201,6 +201,7 @@ def test_run_nowcast_writes_backtest_csv(monkeypatch):
                     "season": "A",
                     "year": str(year),
                     "yield_kg_ha": 800.0 + district * 10 + rng.normal(0, 30),
+                    "reliability": "ok",
                 }
             )
             district_rows.append(
@@ -211,6 +212,7 @@ def test_run_nowcast_writes_backtest_csv(monkeypatch):
                     "season": "B",
                     "year": str(year),
                     "yield_kg_ha": 750.0 + district * 10 + rng.normal(0, 30),
+                    "reliability": "ok",
                 }
             )
     district_yield = pd.DataFrame(district_rows)

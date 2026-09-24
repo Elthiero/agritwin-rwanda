@@ -33,6 +33,7 @@ from agritwin.models.drivers import (
 from agritwin.models.nowcast import (
     attach_lagged_yield,
     build_yield_lookup,
+    exclude_low_reliability,
     leave_one_year_out_cv,
     summarize_cv,
 )
@@ -188,6 +189,12 @@ def run_nowcast() -> None:
                 ndvi_climatology,
                 rainfall_climatology,
                 lead_months,
+            )
+            n_before = len(features_df)
+            features_df = exclude_low_reliability(features_df)
+            logger.info(
+                f"{crop} lead={lead_months}mo: {n_before} rows before reliability "
+                f"filter, {len(features_df)} after (suppressed dropped)"
             )
             if len(features_df) < 10 or features_df["year"].nunique() < 2:
                 logger.warning(f"{crop} lead={lead_months}mo: too little data, skipped")
