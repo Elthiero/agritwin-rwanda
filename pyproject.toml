@@ -23,6 +23,6 @@ select = ["E", "F", "I", "B", "UP", "SIM", "PD"]
 testpaths = ["tests", "api/tests"]
 
 [[tool.mypy.overrides]]
-# scikit-learn and shap ship no inline type stubs or py.typed marker.
-module = ["sklearn.*", "shap.*"]
+# scikit-learn, shap and weasyprint ship no inline type stubs or py.typed marker.
+module = ["sklearn.*", "shap.*", "weasyprint.*"]
 ignore_missing_imports = true
