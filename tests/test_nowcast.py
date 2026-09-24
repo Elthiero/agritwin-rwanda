@@ -203,43 +203,56 @@ def test_leave_one_year_out_cv_returns_one_row_per_held_out_year():
     } <= set(cv.columns)
 
 
-def test_leave_one_year_out_cv_all_mape_values_are_finite_and_non_negative():
+def test_leave_one_year_out_cv_all_mape_and_mae_values_are_finite_and_non_negative():
     features = _synthetic_features_df(n_districts=6, n_years=5)
     cv = leave_one_year_out_cv(features, min_train_rows=10)
-    mape_cols = [
-        "baseline_district_mean_mape",
-        "baseline_last_year_mape",
-        "ridge_mape",
-        "lgbm_mape",
-    ]
-    for col in mape_cols:
-        assert (cv[col] >= 0).all()
-        assert cv[col].notna().all()
+    for model_name in ("baseline_district_mean", "baseline_last_year", "ridge", "lgbm"):
+        for col in (f"{model_name}_mape", f"{model_name}_mae_kg_ha"):
+            assert (cv[col] >= 0).all()
+            assert cv[col].notna().all()
+
+
+def _cv_fold_row(**overrides) -> dict:
+    row = {"held_out_year": 2020, "n_test_rows": 1}
+    for model_name in ("baseline_district_mean", "baseline_last_year", "ridge", "lgbm"):
+        row[f"{model_name}_mape"] = 100.0
+        row[f"{model_name}_mae_kg_ha"] = 100.0
+    row.update(overrides)
+    return row
 
 
 def test_summarize_cv_weights_by_test_row_count():
     cv = pd.DataFrame(
         [
-            {
-                "held_out_year": 2020,
-                "n_test_rows": 1,
-                "baseline_district_mean_mape": 100.0,
-                "baseline_last_year_mape": 100.0,
-                "ridge_mape": 100.0,
-                "lgbm_mape": 100.0,
-            },
-            {
-                "held_out_year": 2021,
-                "n_test_rows": 9,
-                "baseline_district_mean_mape": 0.0,
-                "baseline_last_year_mape": 0.0,
-                "ridge_mape": 0.0,
-                "lgbm_mape": 0.0,
-            },
+            _cv_fold_row(held_out_year=2020, n_test_rows=1),
+            _cv_fold_row(
+                held_out_year=2021,
+                n_test_rows=9,
+                baseline_district_mean_mape=0.0,
+                baseline_last_year_mape=0.0,
+                ridge_mape=0.0,
+                lgbm_mape=0.0,
+                baseline_district_mean_mae_kg_ha=0.0,
+                baseline_last_year_mae_kg_ha=0.0,
+                ridge_mae_kg_ha=0.0,
+                lgbm_mae_kg_ha=0.0,
+            ),
         ]
     )
     summary = summarize_cv(cv)
     assert summary["ridge_mape"] == pytest.approx(10.0)  # weighted, not (100+0)/2 = 50
+    assert summary["ridge_mae_kg_ha"] == pytest.approx(10.0)
+
+
+def test_summarize_cv_includes_std_across_years():
+    cv = pd.DataFrame(
+        [
+            _cv_fold_row(held_out_year=2020, n_test_rows=10, ridge_mape=20.0),
+            _cv_fold_row(held_out_year=2021, n_test_rows=10, ridge_mape=40.0),
+        ]
+    )
+    summary = summarize_cv(cv)
+    assert summary["ridge_mape_std_across_years"] == pytest.approx(10.0)  # std of [20, 40]
 
 
 def test_feature_columns_never_includes_last_year_yield():

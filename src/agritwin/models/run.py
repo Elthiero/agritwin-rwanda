@@ -31,6 +31,7 @@ from agritwin.models.drivers import (
     fit_final_model,
 )
 from agritwin.models.nowcast import (
+    MODEL_NAMES,
     attach_lagged_yield,
     build_yield_lookup,
     exclude_low_reliability,
@@ -207,13 +208,15 @@ def run_nowcast() -> None:
             summary = summarize_cv(cv)
             logger.info(f"{crop} lead={lead_months}mo nowcast backtest: {summary}")
 
-            for model_name, mape in summary.items():
+            for model_name in MODEL_NAMES:
                 backtest_rows.append(
                     {
                         "crop": crop,
                         "lead_months": lead_months,
-                        "model": model_name.removesuffix("_mape"),
-                        "mape_pct": mape,
+                        "model": model_name,
+                        "mape_pct": summary[f"{model_name}_mape"],
+                        "mape_std_across_years": summary[f"{model_name}_mape_std_across_years"],
+                        "mae_kg_ha": summary[f"{model_name}_mae_kg_ha"],
                         "n_years_tested": len(cv),
                     }
                 )

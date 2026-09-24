@@ -188,6 +188,17 @@ def _mape(actual: pd.Series, predicted: pd.Series) -> float:
     return float((np.abs(actual[valid] - predicted[valid]) / np.abs(actual[valid])).mean() * 100)
 
 
+def _mae(actual: pd.Series, predicted: pd.Series) -> float:
+    """Mean absolute error, in the same unit as actual (kg/ha here). Unlike MAPE, well
+    defined even where actual is 0, and not misleading when yields are low: per the
+    external review, MAPE alone overstates error at low-yield crops/districts relative
+    to what the absolute kg/ha miss actually looks like."""
+    return float(np.abs(actual - predicted).mean())
+
+
+MODEL_NAMES = ("baseline_district_mean", "baseline_last_year", "ridge", "lgbm")
+
+
 def leave_one_year_out_cv(features_df: pd.DataFrame, min_train_rows: int = 20) -> pd.DataFrame:
     """One row of metrics per held-out year: MAPE (on reconstructed actual yield) for
     both naive baselines, ridge, and a small LightGBM. The historical mean used to build
@@ -235,27 +246,31 @@ def leave_one_year_out_cv(features_df: pd.DataFrame, min_train_rows: int = 20) -
         lgbm.fit(train[FEATURE_COLUMNS], train["target_anomaly"])
         lgbm_pred = test["historical_mean"] + lgbm.predict(test[FEATURE_COLUMNS])
 
-        rows.append(
-            {
-                "held_out_year": held_out_year,
-                "n_test_rows": len(test),
-                "baseline_district_mean_mape": _mape(test_actual, baseline_district_mean_pred),
-                "baseline_last_year_mape": _mape(test_actual, baseline_last_year_pred),
-                "ridge_mape": _mape(test_actual, ridge_pred),
-                "lgbm_mape": _mape(test_actual, lgbm_pred),
-            }
-        )
+        predictions = {
+            "baseline_district_mean": baseline_district_mean_pred,
+            "baseline_last_year": baseline_last_year_pred,
+            "ridge": ridge_pred,
+            "lgbm": lgbm_pred,
+        }
+        row = {"held_out_year": held_out_year, "n_test_rows": len(test)}
+        for model_name, pred in predictions.items():
+            row[f"{model_name}_mape"] = _mape(test_actual, pred)
+            row[f"{model_name}_mae_kg_ha"] = _mae(test_actual, pred)
+        rows.append(row)
     return pd.DataFrame(rows)
 
 
 def summarize_cv(cv_results: pd.DataFrame) -> dict:
-    """Row-count-weighted average MAPE per model across all held-out years, so a year
-    with more test rows counts more, not every year equally regardless of sample size."""
+    """Row-count-weighted average MAPE and MAE per model across all held-out years, so a
+    year with more test rows counts more, not every year equally regardless of sample
+    size. Also the unweighted standard deviation of each model's per-fold MAPE across
+    years, since a mean improvement over baseline is not meaningful on its own if it is
+    smaller than the year-to-year spread (see docs/decisions.md 2026-09-24)."""
     weights = cv_results["n_test_rows"]
-    mape_cols = [
-        "baseline_district_mean_mape",
-        "baseline_last_year_mape",
-        "ridge_mape",
-        "lgbm_mape",
-    ]
-    return {col: float(np.average(cv_results[col], weights=weights)) for col in mape_cols}
+    summary = {}
+    for model_name in MODEL_NAMES:
+        mape_col, mae_col = f"{model_name}_mape", f"{model_name}_mae_kg_ha"
+        summary[mape_col] = float(np.average(cv_results[mape_col], weights=weights))
+        summary[mae_col] = float(np.average(cv_results[mae_col], weights=weights))
+        summary[f"{model_name}_mape_std_across_years"] = float(cv_results[mape_col].std(ddof=0))
+    return summary
