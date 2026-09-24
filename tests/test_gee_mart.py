@@ -13,7 +13,6 @@ def test_row_count_preserved_after_join():
         {
             "nisr_district_code": [11, 11, 43, 43],
             "district_name": ["Kigali", "Kigali", "Musanze", "Musanze"],
-            "gaul_district_code": [1, 1, 2, 2],
             "year": [2024, 2024, 2024, 2024],
             "season": ["A", "B", "A", "B"],
             "ndvi_mean": [0.62, 0.71, 0.68, 0.75],
@@ -23,7 +22,6 @@ def test_row_count_preserved_after_join():
         {
             "nisr_district_code": [11, 11, 43, 43],
             "district_name": ["Kigali", "Kigali", "Musanze", "Musanze"],
-            "gaul_district_code": [1, 1, 2, 2],
             "year": [2024, 2024, 2024, 2024],
             "season": ["A", "B", "A", "B"],
             "rainfall_mm": [450.0, 520.0, 480.0, 550.0],
@@ -33,7 +31,6 @@ def test_row_count_preserved_after_join():
         {
             "nisr_district_code": [11, 43],
             "district_name": ["Kigali", "Musanze"],
-            "gaul_district_code": [1, 2],
             "cropland_fraction": [0.45, 0.38],
         }
     )
@@ -41,7 +38,6 @@ def test_row_count_preserved_after_join():
         {
             "nisr_district_code": [11, 43],
             "district_name": ["Kigali", "Musanze"],
-            "gaul_district_code": [1, 2],
             "soil_ph": [6.2, 5.8],
             "soil_nitrogen": [1.2, 1.5],
             "soil_carbon": [15.0, 18.0],
@@ -53,7 +49,6 @@ def test_row_count_preserved_after_join():
     assert list(result.columns) == [
         "nisr_district_code",
         "district_name",
-        "gaul_district_code",
         "year",
         "season",
         "ndvi_mean",
@@ -74,7 +69,6 @@ def test_broadcast_time_invariant_across_seasons_and_years():
         {
             "nisr_district_code": [11, 11],
             "district_name": ["Kigali", "Kigali"],
-            "gaul_district_code": [1, 1],
             "year": [2024, 2025],
             "season": ["A", "A"],
             "ndvi_mean": [0.62, 0.65],
@@ -84,7 +78,6 @@ def test_broadcast_time_invariant_across_seasons_and_years():
         {
             "nisr_district_code": [11, 11],
             "district_name": ["Kigali", "Kigali"],
-            "gaul_district_code": [1, 1],
             "year": [2024, 2025],
             "season": ["A", "A"],
             "rainfall_mm": [450.0, 460.0],
@@ -94,7 +87,6 @@ def test_broadcast_time_invariant_across_seasons_and_years():
         {
             "nisr_district_code": [11],
             "district_name": ["Kigali"],
-            "gaul_district_code": [1],
             "cropland_fraction": [0.45],
         }
     )
@@ -102,7 +94,6 @@ def test_broadcast_time_invariant_across_seasons_and_years():
         {
             "nisr_district_code": [11],
             "district_name": ["Kigali"],
-            "gaul_district_code": [1],
             "soil_ph": [6.2],
             "soil_nitrogen": [1.2],
             "soil_carbon": [15.0],
@@ -121,7 +112,6 @@ def test_no_nulls_in_key_columns():
         {
             "nisr_district_code": [11],
             "district_name": ["Kigali"],
-            "gaul_district_code": [1],
             "year": [2024],
             "season": ["A"],
             "ndvi_mean": [0.62],
@@ -131,7 +121,6 @@ def test_no_nulls_in_key_columns():
         {
             "nisr_district_code": [11],
             "district_name": ["Kigali"],
-            "gaul_district_code": [1],
             "year": [2024],
             "season": ["A"],
             "rainfall_mm": [450.0],
@@ -141,7 +130,6 @@ def test_no_nulls_in_key_columns():
         {
             "nisr_district_code": [11],
             "district_name": ["Kigali"],
-            "gaul_district_code": [1],
             "cropland_fraction": [0.45],
         }
     )
@@ -149,7 +137,6 @@ def test_no_nulls_in_key_columns():
         {
             "nisr_district_code": [11],
             "district_name": ["Kigali"],
-            "gaul_district_code": [1],
             "soil_ph": [6.2],
             "soil_nitrogen": [1.2],
             "soil_carbon": [15.0],
@@ -158,5 +145,5 @@ def test_no_nulls_in_key_columns():
     )
     result = join_gee_features(ndvi, rainfall, cropland, soil)
     assert not result[
-        ["nisr_district_code", "district_name", "gaul_district_code", "year", "season"]
+        ["nisr_district_code", "district_name", "year", "season"]
     ].isna().any().any()

@@ -41,13 +41,15 @@ def join_gee_features(
     season/year combinations when joined.
 
     Returns a single 420-row DataFrame with columns:
-    nisr_district_code, district_name, gaul_district_code, year, season, ndvi_mean,
-    rainfall_mm, cropland_fraction, soil_ph, soil_nitrogen, soil_carbon,
-    soil_texture_class. nisr_district_code comes from data/reference/district_crosswalk.csv
-    (see docs/decisions.md 2026-09-23); the four inputs already carry it since
-    gee/run.py re-keys every GEE CSV before writing.
+    nisr_district_code, district_name, year, season, ndvi_mean, rainfall_mm,
+    cropland_fraction, soil_ph, soil_nitrogen, soil_carbon, soil_texture_class.
+    All four inputs are already keyed by nisr_district_code natively: gee/run.py
+    extracts every GEE dataset over boundaries.hdx_districts_fc() (HDX district
+    polygons, which carry nisr_district_code directly), not the GAUL boundaries used
+    only for the /districts boundary GeoJSON. There is no gaul_district_code here and
+    no crosswalk join needed (see docs/decisions.md 2026-09-23).
     """
-    district_keys = ["nisr_district_code", "district_name", "gaul_district_code"]
+    district_keys = ["nisr_district_code", "district_name"]
     merged = ndvi_df.merge(rainfall_df, on=district_keys + ["year", "season"])
     merged = merged.merge(cropland_df, on=district_keys)
     merged = merged.merge(soil_df, on=district_keys)
@@ -55,7 +57,6 @@ def join_gee_features(
         [
             "nisr_district_code",
             "district_name",
-            "gaul_district_code",
             "year",
             "season",
             "ndvi_mean",
