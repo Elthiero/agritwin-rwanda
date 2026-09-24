@@ -1,24 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import type { FeatureCollection, Geometry } from 'geojson'
 import './App.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api/v1'
 
-interface District {
-  type: string
-  features: Array<{
-    type: string
-    properties: {
-      district_name: string
-      gaul_district_code: number
-    }
-    geometry: {
-      type: string
-      coordinates: any
-    }
-  }>
+interface DistrictProperties {
+  district_name: string
+  gaul_district_code: number
 }
+
+type DistrictCollection = FeatureCollection<Geometry, DistrictProperties>
 
 export default function App() {
   const mapContainer = useRef<HTMLDivElement>(null)
@@ -40,7 +33,7 @@ export default function App() {
     map.current.on('load', async () => {
       try {
         const response = await fetch(`${API_BASE}/districts`)
-        const data: District = await response.json()
+        const data: DistrictCollection = await response.json()
         setDistrictCount(data.features.length)
 
         map.current!.addSource('districts', {

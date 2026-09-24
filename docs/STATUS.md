@@ -4,7 +4,7 @@ Updated 2026-09-24. Supersedes the 2026-09-23 version of this file, which descri
 
 ## Summary
 
-66 commits, all still on a single compressed development arc. The full data pipeline now runs end to end on real data: SAS microdata harmonization, yield/QC cleaning, survey-weighted district estimates (validated against a real published NISR report), satellite feature extraction including climatology and lead-time cutoffs, attainable yield and yield gap, a driver model (LightGBM + SHAP) per crop, and a nowcast model with a leave-one-year-out backtest. A round of external review this session found and fixed four real correctness bugs in the nowcast (a satellite date-alignment error, feature leakage, and survey-noise contamination of the training target) and reported the results honestly, including where the models do not beat a naive baseline. 133 tests pass, `ruff`/`mypy` clean. The API has grown from 2 to 3 of the ~9 planned endpoints. The web app is unchanged since the previous audit: still a single unrouted page, still failing `tsc`, `eslint`, and `vitest`. `models/scenario.py` and `export/` do not exist yet. Rough MVP completion: **~55-60%** — the entire data-to-model pipeline is real, tested, and honestly validated; what's missing is mostly the presentation layer (API surface, web app) and the scenario/export modules.
+66 commits, all still on a single compressed development arc. The full data pipeline now runs end to end on real data: SAS microdata harmonization, yield/QC cleaning, survey-weighted district estimates (validated against a real published NISR report), satellite feature extraction including climatology and lead-time cutoffs, attainable yield and yield gap, a driver model (LightGBM + SHAP) per crop, and a nowcast model with a leave-one-year-out backtest. A round of external review this session found and fixed four real correctness bugs in the nowcast (a satellite date-alignment error, feature leakage, and survey-noise contamination of the training target) and reported the results honestly, including where the models do not beat a naive baseline. 133 tests pass, `ruff`/`mypy` clean. The API has grown from 2 to 5 of the ~9 planned endpoints (`/drivers` and `/backtest` added; both found and documented, rather than papered over, a real gap: neither the driver model nor the nowcast ever split by season). `make lint && make test` is fully green across the whole repo for the first time this session: the web app's `tsc`, `eslint`, and `vitest` all pass now (a missing `vite-env.d.ts`, `noEmit` in `tsconfig.json`, a real GeoJSON type instead of a hand-rolled one, an ESLint config, and one real test file). It is still a single unrouted page with no real product pages yet. `models/scenario.py` and `export/` do not exist yet. Rough MVP completion: **~60-65%** — the entire data-to-model pipeline is real, tested, and honestly validated; what's missing is mostly the presentation layer (API surface, web app) and the scenario/export modules.
 
 ## What is built and working
 
@@ -25,7 +25,7 @@ Updated 2026-09-24. Supersedes the 2026-09-23 version of this file, which descri
 - **`src/agritwin/features/gee_mart.py`**: still only joins GEE outputs to each other. The district crosswalk needed to join SAS-derived estimates to it now exists (`data/reference/district_crosswalk.csv`), but the join itself has not been built.
 - **`stg_sas_plot_crop.district_name`**: still null. The crosswalk exists but was never wired into `harmonize/`'s output; `survey/`'s public `geo_code` is still a raw numeric code, not a label.
 - **API**: 3 of ~9 endpoints (`/health`, `/geo/districts`, `/yield-gap`). `/kpis`, `/districts/{code}/profile`, `/drivers`, `/nowcast`, `/nowcast/{code}/curve`, `/backtest`, `/scenario/{code}`, `/briefs/{code}.pdf` are unimplemented. The data for `/drivers` and `/nowcast` already exists in `data/public/`; wiring those two is now mechanical, not blocked on missing data.
-- **Web app**: unchanged since the previous audit. Still `web/src/App.tsx`, a single component with a MapLibre basemap and a district-count label. Still fails `tsc` (3 real type errors), `eslint` (no config file exists), and `vitest` (no test files exist). `npm install` now succeeds locally (previously untested), with 12 unaddressed vulnerabilities.
+- **Web app**: `tsc`, `eslint`, and `vitest` all pass now (fixed this session; see `docs/decisions.md` 2026-09-24). Still `web/src/App.tsx`, a single component with a MapLibre basemap and a district-count label, with no other real product pages, no routing, and no i18n wired up despite the dependencies being installed. `npm install` succeeds locally, with 12 unaddressed vulnerabilities (unchanged).
 - **`docs/data/questionnaires/`**: still empty.
 
 ## What is missing vs. the plan
@@ -49,7 +49,7 @@ Updated 2026-09-24. Supersedes the 2026-09-23 version of this file, which descri
 
 ## Technical debt and quick wins
 
-- `web/tsconfig.json`, Vite client types, ESLint config, and test files are all still needed before the web app can build, lint, or test. (S each, same as before)
+- ~~`web/tsconfig.json`, Vite client types, ESLint config, and test files~~ — fixed this session.
 - `stg_sas_plot_crop.district_name` should be wired from the crosswalk now that it exists, rather than left null. (S)
 - `features/gee_mart.py` should join the SAS-side district estimates now that the crosswalk exists. (M)
 - `docs/data/questionnaires/` is still empty; depends on NISR providing the questionnaire PDF. (M, external dependency)
@@ -61,7 +61,7 @@ Updated 2026-09-24. Supersedes the 2026-09-23 version of this file, which descri
 Judging: Problem relevance, Data and methodology, Tech innovation, Usability, Tangible impact (20 pts each).
 
 1. **Wire `/drivers` and `/nowcast` API endpoints** off the data that already exists in `data/public/`. *Usability, Tangible impact.* — **S**, no longer blocked on missing data.
-2. **Fix the web app's build/lint/test toolchain** (tsconfig, ESLint config, Vite env types, at least one real test file). *Usability.* — **S**, unblocks all further frontend work.
+2. ~~Fix the web app's build/lint/test toolchain~~ — done this session.
 3. **Ship one real end-to-end page**: district picker + yield-gap map, backed by the now-real `/yield-gap` endpoint. First thing a judge will actually click. *Usability, Tangible impact.* — **M**
 4. **Wire `district_name` into `stg_sas_plot_crop`** and `features/gee_mart.py`'s SAS-side join, using the now-built crosswalk. *Data and methodology.* — **M**
 5. **`models/scenario.py`**: precomputed lever grid for the scenario explorer. *Tech innovation.* — **M**
