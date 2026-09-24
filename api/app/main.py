@@ -9,7 +9,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from api.app.data_store import DATA_VERSION, data_store
-from api.app.routers import backtest, districts, drivers, geo, kpis, meta, scenario, yield_gap
+from api.app.routers import (
+    backtest,
+    briefs,
+    districts,
+    drivers,
+    geo,
+    kpis,
+    meta,
+    scenario,
+    yield_gap,
+)
 from api.app.settings import get_settings
 
 
@@ -46,6 +56,7 @@ def create_app() -> FastAPI:
     app.include_router(kpis.router, prefix="/api/v1", tags=["kpis"])
     app.include_router(districts.router, prefix="/api/v1", tags=["districts"])
     app.include_router(scenario.router, prefix="/api/v1", tags=["scenario"])
+    app.include_router(briefs.router, prefix="/api/v1", tags=["briefs"])
     return app
 
 
