@@ -1,0 +1,4 @@
+crop,district_code,improved_seed,inorganic_fert,organic_fert,irrigated,mean_yield_kg_ha,ci_low,ci_high,n_plots,reliability
+maize,11.0,False,False,False,False,850.0,780.0,920.0,40,ok
+maize,11.0,True,False,False,False,1100.0,1010.0,1190.0,40,ok
+maize,12.0,False,False,False,False,700.0,600.0,800.0,8,suppressed

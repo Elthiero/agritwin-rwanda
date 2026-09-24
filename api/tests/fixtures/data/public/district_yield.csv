@@ -1,0 +1,6 @@
+geo_level,geo_code,crop,season,year,total_production_kg,total_area_ha,yield_kg_ha,yield_kg_ha_ci_low,yield_kg_ha_ci_high,n_plots,n_segments,reliability
+district,11.0,maize,A,2023,50000.0,55.0,909.1,800.0,1018.2,38,24,ok
+district,11.0,maize,A,2024,52000.0,55.0,945.5,830.0,1061.0,40,25,ok
+district,12.0,maize,A,2024,20000.0,28.0,714.3,500.0,928.6,8,4,suppressed
+national,RWA,maize,A,2024,9000000.0,6428.6,1400.0,1300.0,1500.0,3000,1200,ok
+national,RWA,beans,A,2024,3000000.0,4615.4,650.0,600.0,700.0,2000,900,ok

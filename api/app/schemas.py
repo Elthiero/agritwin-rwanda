@@ -91,6 +91,98 @@ class BacktestRow(BaseModel):
     n_years_tested: int
 
 
+class KpiRow(BaseModel):
+    """National-level yield estimate for one crop, for one season x year, per
+    src/agritwin/survey/ (geo_level == "national"). One row per MVP crop, not a single
+    blended number, so each keeps its own CI and reliability."""
+
+    crop: Crop
+    season: Season
+    year: int
+    yield_kg_ha: float
+    yield_kg_ha_ci_low: float | None = None
+    yield_kg_ha_ci_high: float | None = None
+    n_plots: int
+    reliability: Reliability
+
+
+class DistrictInfo(BaseModel):
+    """Minimal district identity: code plus display name."""
+
+    district_code: int
+    district_name: str
+
+
+class YearlyYield(BaseModel):
+    """One year's district-level weighted yield estimate, per src/agritwin/survey/."""
+
+    year: int
+    yield_kg_ha: float
+    yield_kg_ha_ci_low: float | None = None
+    yield_kg_ha_ci_high: float | None = None
+    reliability: Reliability
+
+
+class YearlyGap(BaseModel):
+    """One year's actual vs. attainable yield for a district, per
+    src/agritwin/models/attainable.py."""
+
+    year: int
+    actual_yield_kg_ha: float
+    attainable_yield_kg_ha: float | None = None
+    yield_gap_kg_ha: float | None = None
+    yield_gap_pct: float | None = None
+    reliability: Reliability
+
+
+class DistrictProfile(BaseModel):
+    """Composite per-district view assembled from data/public/ only (no new modeling):
+    yield trend and yield-gap trend across years, this district's top SHAP drivers, and
+    its peer districts (same k-means zone, per src/agritwin/models/attainable.py's
+    zone assignment, the same fallback used in place of a real agro-ecological-zone
+    layer)."""
+
+    district_code: int
+    district_name: str
+    crop: Crop
+    yield_trend: list[YearlyYield]
+    gap_trend: list[YearlyGap]
+    top_drivers: list[DriverRow]
+    peer_districts: list[DistrictInfo]
+
+
+class ScenarioRow(BaseModel):
+    """One lever configuration's predicted mean yield for one district x crop, per
+    src/agritwin/models/scenario.py. Model-based estimate, not causal (CLAUDE.md rule
+    5): a hypothetical input to the driver model, not a simulation of a real
+    intervention. Same season caveat as DriverRow/BacktestRow: season is accepted but
+    has no effect, since the driver model pools both seasons."""
+
+    crop: Crop
+    district_code: int
+    improved_seed: bool
+    inorganic_fert: bool
+    organic_fert: bool
+    irrigated: bool
+    mean_yield_kg_ha: float
+    ci_low: float
+    ci_high: float
+    n_plots: int
+    reliability: Reliability
+
+
+class MetaResponse(BaseModel):
+    """Crops, seasons, years and districts that actually have data behind them, so the
+    frontend never hardcodes scope that could drift from data/public/."""
+
+    crops: list[Crop]
+    seasons: list[Season]
+    years: list[int]
+    districts: list[DistrictInfo]
+    data_version: str
+    last_updated: str | None = None
+
+
 class GeoJSONResponse(BaseModel):
     """GeoJSON FeatureCollection response."""
 

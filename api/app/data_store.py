@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import loguru
@@ -14,6 +15,7 @@ logger = loguru.logger
 
 DATA_EXTERNAL = Path(__file__).resolve().parents[2] / "data" / "external"
 DATA_REFERENCE = Path(__file__).resolve().parents[2] / "data" / "reference"
+DATA_VERSION = "2026.10.0"  # matches config/settings.yaml's project.data_version
 
 
 class DataStore:
@@ -25,6 +27,10 @@ class DataStore:
         self.drivers: pd.DataFrame | None = None
         self.drivers_by_district: pd.DataFrame | None = None
         self.backtest: pd.DataFrame | None = None
+        self.district_yield: pd.DataFrame | None = None
+        self.district_zones: pd.DataFrame | None = None
+        self.scenario: pd.DataFrame | None = None
+        self.last_updated: str | None = None
 
     def _load_public_csv(self, filename: str) -> pd.DataFrame | None:
         path = get_settings().DATA_DIR / "public" / filename
@@ -70,6 +76,17 @@ class DataStore:
         self.drivers = self._load_public_csv("drivers.csv")
         self.drivers_by_district = self._load_public_csv("drivers_by_district.csv")
         self.backtest = self._load_public_csv("nowcast_backtest.csv")
+        self.district_yield = self._load_public_csv("district_yield.csv")
+        self.district_zones = self._load_public_csv("district_zones.csv")
+        self.scenario = self._load_public_csv("scenario.csv")
+
+        public_dir = get_settings().DATA_DIR / "public"
+        mtimes = (
+            [f.stat().st_mtime for f in public_dir.glob("*.csv")] if public_dir.exists() else []
+        )
+        self.last_updated = (
+            datetime.fromtimestamp(max(mtimes), tz=UTC).isoformat() if mtimes else None
+        )
 
     def clear(self) -> None:
         """Clear data on shutdown."""
@@ -78,6 +95,20 @@ class DataStore:
         self.drivers = None
         self.drivers_by_district = None
         self.backtest = None
+        self.district_yield = None
+        self.district_zones = None
+        self.scenario = None
+        self.last_updated = None
+
+    def district_name(self, district_code: int) -> str | None:
+        """NISR district_code -> name, from the boundary features' already-joined
+        district_code property (see _attach_nisr_district_codes)."""
+        if not self.districts_geojson:
+            return None
+        for feature in self.districts_geojson["features"]:
+            if feature["properties"].get("district_code") == district_code:
+                return feature["properties"]["district_name"]
+        return None
 
 
 data_store = DataStore()
