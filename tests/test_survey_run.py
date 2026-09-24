@@ -7,7 +7,10 @@ import pandas as pd
 from agritwin.survey.run import to_public
 
 
-def test_to_public_drops_suppressed_rows():
+def test_to_public_keeps_suppressed_rows_with_the_reliability_flag():
+    # CLAUDE.md golden rule 6: low-reliability cells are flagged and greyed out in the
+    # UI, not removed. to_public() must not silently drop them; that's a decision for the
+    # API/frontend layer to render, not for the export step to make on their behalf.
     district_yield = pd.DataFrame(
         [
             {
@@ -51,40 +54,10 @@ def test_to_public_drops_suppressed_rows():
         ]
     )
     public = to_public(district_yield)
-    assert "suppressed" not in set(public["reliability"])
-    assert len(public) == 1
-    assert public.iloc[0]["geo_code"] == "12"
-
-
-def test_to_public_never_has_a_row_below_the_suppression_threshold():
-    # Every remaining row's n_segments must reflect a reliability decision already made
-    # (not re-derived here); this just confirms suppression happened, whatever the
-    # configured min_segments threshold was upstream.
-    district_yield = pd.DataFrame(
-        [
-            {
-                "geo_level": "national",
-                "geo_code": "RWA",
-                "crop": "beans",
-                "season": "B",
-                "year": "2024",
-                "total_production_kg": 100.0,
-                "total_production_kg_se": 50.0,
-                "total_area_ha": 1.0,
-                "total_area_ha_se": 0.5,
-                "yield_kg_ha": 100.0,
-                "yield_kg_ha_se": 40.0,
-                "yield_kg_ha_ci_low": 20.0,
-                "yield_kg_ha_ci_high": 180.0,
-                "yield_kg_ha_cv": 0.40,
-                "n_plots": 2,
-                "n_segments": 2,
-                "reliability": "suppressed",
-            }
-        ]
-    )
-    public = to_public(district_yield)
-    assert len(public) == 0
+    assert len(public) == 2
+    assert set(public["reliability"]) == {"suppressed", "ok"}
+    suppressed_row = public[public["geo_code"] == "11"].iloc[0]
+    assert suppressed_row["yield_kg_ha"] == 100.0  # the number itself is not hidden
 
 
 def test_to_public_drops_internal_standard_error_columns():

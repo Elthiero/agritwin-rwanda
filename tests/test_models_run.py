@@ -61,6 +61,10 @@ def test_run_wires_settings_and_writes_expected_outputs(monkeypatch, tmp_path):
                 "season": "A",
                 "year": "2024",
                 "yield_kg_ha": 900.0,
+                "yield_kg_ha_ci_low": 800.0,
+                "yield_kg_ha_ci_high": 1000.0,
+                "n_plots": 10,
+                "n_segments": 6,
                 "reliability": "ok",
             }
         ]

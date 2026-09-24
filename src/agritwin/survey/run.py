@@ -73,13 +73,13 @@ def build_district_yield(plot_crop: pd.DataFrame, settings: dict) -> pd.DataFram
 
 
 def to_public(district_yield: pd.DataFrame) -> pd.DataFrame:
-    """Suppressed, aggregated-only view: drops "suppressed" rows entirely (per
-    CLAUDE.md golden rule 6, cells below n_min/min_segments are not shown, not just
-    greyed with the real number visible) and drops the plot/segment-count and
-    standard-error columns that are safe for internal QC but not needed for public
-    consumption beyond geo_level/geo_code (never plot- or farmer-level)."""
-    public = district_yield[district_yield["reliability"] != "suppressed"].copy()
-    return public[
+    """Aggregated-only view: keeps every row, including "suppressed" ones, since
+    CLAUDE.md golden rule 6 requires low-reliability cells to be "flagged... and greyed
+    out in the UI", not removed (the API and frontend decide how to render the flag; this
+    export just carries it through). Drops the standard-error and CV columns, which are
+    safe for internal QC but redundant with the CI already shown, and are never plot- or
+    farmer-level so there is nothing privacy-sensitive being kept either way."""
+    return district_yield[
         [
             "geo_level",
             "geo_code",

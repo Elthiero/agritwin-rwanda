@@ -67,9 +67,10 @@ def run() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     DATA_PUBLIC.mkdir(parents=True, exist_ok=True)
     zones.to_csv(DATA_PUBLIC / "district_zones.csv", index=False)
 
-    public_gap = yield_gap[yield_gap["reliability"] != "suppressed"].drop(columns="reliability")
-    public_gap.to_csv(DATA_PUBLIC / "yield_gap.csv", index=False)
-    logger.info(f"wrote district_zones.csv and yield_gap.csv ({len(public_gap)} rows)")
+    # Every row kept, including "suppressed" ones: CLAUDE.md golden rule 6 flags and
+    # greys out low-reliability cells in the UI, it does not hide them.
+    yield_gap.to_csv(DATA_PUBLIC / "yield_gap.csv", index=False)
+    logger.info(f"wrote district_zones.csv and yield_gap.csv ({len(yield_gap)} rows)")
 
     return zones, attainable_yield, yield_gap
 

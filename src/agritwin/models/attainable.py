@@ -114,10 +114,13 @@ def compute_yield_gap(
 ) -> pd.DataFrame:
     """Yield gap per district x crop x season x year: attainable (that district's zone,
     same crop/season, pooled across years) minus actual (survey/'s district-level weighted
-    yield estimate for that specific year). Gap is null (not zero, and not dropped) where
-    either input is missing or either input is suppressed, since a gap computed from an
-    unreliable actual or attainable figure would itself be unreliable in a way that isn't
-    visible if silently computed anyway.
+    yield estimate for that specific year). The gap number itself is computed whenever
+    both point estimates exist, regardless of reliability tier: per CLAUDE.md golden rule
+    6, a low-reliability cell is "flagged... and greyed out in the UI", not hidden, so the
+    number stays and the combined reliability (the worse of the actual and attainable
+    reliability) travels with it instead. Gap is null only when there is genuinely no
+    matching attainable-yield group for that district's zone x crop x season (a left-merge
+    miss, not a reliability judgment).
     """
     district_actual = district_yield[district_yield["geo_level"] == "district"].copy()
     district_actual["district_code"] = district_actual["geo_code"].astype(float)
@@ -132,16 +135,21 @@ def compute_yield_gap(
         suffixes=("_actual", "_attainable"),
     )
 
-    both_reliable = (merged["reliability_actual"] == "ok") & (
-        merged["reliability_attainable"] == "ok"
+    merged["yield_gap_kg_ha"] = merged["attainable_yield_kg_ha"] - merged["yield_kg_ha"]
+    merged["yield_gap_pct"] = merged["yield_gap_kg_ha"] / merged["attainable_yield_kg_ha"] * 100
+
+    reliability_rank = {"ok": 0, "use_with_caution": 1, "suppressed": 2}
+    actual_rank = merged["reliability_actual"].map(reliability_rank)
+    attainable_rank = merged["reliability_attainable"].map(reliability_rank).fillna(
+        reliability_rank["suppressed"]
     )
-    gap_kg_ha = (merged["attainable_yield_kg_ha"] - merged["yield_kg_ha"]).where(both_reliable)
-    gap_pct = (gap_kg_ha / merged["attainable_yield_kg_ha"] * 100).where(both_reliable)
+    worse_rank = pd.Series(np.maximum(actual_rank, attainable_rank), index=merged.index)
+    rank_to_label = {v: k for k, v in reliability_rank.items()}
+    merged["reliability"] = worse_rank.map(rank_to_label)
 
-    merged["yield_gap_kg_ha"] = gap_kg_ha
-    merged["yield_gap_pct"] = gap_pct
-    merged["reliability"] = np.where(both_reliable, "ok", "suppressed")
-
+    # n_plots/n_segments/reliability exist on both sides of the merge (district_yield and
+    # attainable_yield each carry their own), so pandas suffixes them; the "actual" side's
+    # sample size is what a district x crop x season x year figure's own n_plots means.
     return merged[
         [
             "district_code",
@@ -150,12 +158,24 @@ def compute_yield_gap(
             "season",
             "year",
             "yield_kg_ha",
+            "yield_kg_ha_ci_low",
+            "yield_kg_ha_ci_high",
             "attainable_yield_kg_ha",
             "yield_gap_kg_ha",
             "yield_gap_pct",
+            "n_plots_actual",
+            "n_segments_actual",
             "reliability",
         ]
-    ].rename(columns={"yield_kg_ha": "actual_yield_kg_ha"})
+    ].rename(
+        columns={
+            "yield_kg_ha": "actual_yield_kg_ha",
+            "yield_kg_ha_ci_low": "actual_yield_kg_ha_ci_low",
+            "yield_kg_ha_ci_high": "actual_yield_kg_ha_ci_high",
+            "n_plots_actual": "n_plots",
+            "n_segments_actual": "n_segments",
+        }
+    )
 
 
 def prepare_eligible_plots(plot_crop: pd.DataFrame, zones: pd.DataFrame) -> pd.DataFrame:

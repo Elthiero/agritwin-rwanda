@@ -116,80 +116,89 @@ def test_compute_attainable_yield_separates_different_zone_crop_season_groups():
     assert len(result) == 4
 
 
+def _district_yield_row(**overrides) -> dict:
+    base = {
+        "geo_level": "district",
+        "geo_code": "11",
+        "crop": "maize",
+        "season": "A",
+        "year": "2024",
+        "yield_kg_ha": 800.0,
+        "yield_kg_ha_ci_low": 700.0,
+        "yield_kg_ha_ci_high": 900.0,
+        "n_plots": 40,
+        "n_segments": 25,
+        "reliability": "ok",
+    }
+    base.update(overrides)
+    return base
+
+
+def _attainable_row(**overrides) -> dict:
+    base = {
+        "zone_id": 0,
+        "crop": "maize",
+        "season": "A",
+        "attainable_yield_kg_ha": 1000.0,
+        "n_plots": 50,
+        "n_segments": 30,
+        "reliability": "ok",
+    }
+    base.update(overrides)
+    return base
+
+
 def test_compute_yield_gap_matches_actual_to_its_district_zone():
     district_yield = pd.DataFrame(
         [
-            {
-                "geo_level": "district",
-                "geo_code": "11",
-                "crop": "maize",
-                "season": "A",
-                "year": "2024",
-                "yield_kg_ha": 800.0,
-                "reliability": "ok",
-            },
-            {
-                "geo_level": "national",  # must be excluded, not a district row
-                "geo_code": "RWA",
-                "crop": "maize",
-                "season": "A",
-                "year": "2024",
-                "yield_kg_ha": 900.0,
-                "reliability": "ok",
-            },
+            _district_yield_row(),
+            _district_yield_row(geo_level="national", geo_code="RWA", yield_kg_ha=900.0),
         ]
     )
-    attainable_yield = pd.DataFrame(
-        [
-            {
-                "zone_id": 0,
-                "crop": "maize",
-                "season": "A",
-                "attainable_yield_kg_ha": 1000.0,
-                "reliability": "ok",
-            }
-        ]
-    )
+    attainable_yield = pd.DataFrame([_attainable_row()])
     zones = pd.DataFrame({"nisr_district_code": [11], "zone_id": [0]})
 
     result = compute_yield_gap(district_yield, attainable_yield, zones)
-    assert len(result) == 1
+    assert len(result) == 1  # national row excluded, not a district row
     row = result.iloc[0]
     assert row["actual_yield_kg_ha"] == 800.0
+    assert row["actual_yield_kg_ha_ci_low"] == 700.0
+    assert row["actual_yield_kg_ha_ci_high"] == 900.0
     assert row["attainable_yield_kg_ha"] == 1000.0
     assert row["yield_gap_kg_ha"] == pytest.approx(200.0)
     assert row["yield_gap_pct"] == pytest.approx(20.0)
+    assert row["n_plots"] == 40  # the actual side's sample size, not attainable's
     assert row["reliability"] == "ok"
 
 
-def test_compute_yield_gap_null_not_zero_when_either_side_unreliable():
-    district_yield = pd.DataFrame(
-        [
-            {
-                "geo_level": "district",
-                "geo_code": "11",
-                "crop": "maize",
-                "season": "A",
-                "year": "2024",
-                "yield_kg_ha": 800.0,
-                "reliability": "suppressed",
-            }
-        ]
-    )
-    attainable_yield = pd.DataFrame(
-        [
-            {
-                "zone_id": 0,
-                "crop": "maize",
-                "season": "A",
-                "attainable_yield_kg_ha": 1000.0,
-                "reliability": "ok",
-            }
-        ]
-    )
+def test_compute_yield_gap_is_still_computed_when_actual_is_low_reliability():
+    # golden rule 6: low-reliability cells are flagged and greyed out, not hidden. The
+    # gap number must still be present; only the reliability flag changes.
+    district_yield = pd.DataFrame([_district_yield_row(reliability="use_with_caution")])
+    attainable_yield = pd.DataFrame([_attainable_row()])
+    zones = pd.DataFrame({"nisr_district_code": [11], "zone_id": [0]})
+
+    result = compute_yield_gap(district_yield, attainable_yield, zones)
+    assert result.iloc[0]["yield_gap_kg_ha"] == pytest.approx(200.0)
+    assert result.iloc[0]["reliability"] == "use_with_caution"
+
+
+def test_compute_yield_gap_reliability_is_the_worse_of_actual_and_attainable():
+    district_yield = pd.DataFrame([_district_yield_row(reliability="ok")])
+    attainable_yield = pd.DataFrame([_attainable_row(reliability="suppressed")])
+    zones = pd.DataFrame({"nisr_district_code": [11], "zone_id": [0]})
+
+    result = compute_yield_gap(district_yield, attainable_yield, zones)
+    assert result.iloc[0]["reliability"] == "suppressed"
+
+
+def test_compute_yield_gap_null_only_when_no_matching_attainable_group():
+    district_yield = pd.DataFrame([_district_yield_row(crop="sorghum")])
+    attainable_yield = pd.DataFrame([_attainable_row(crop="maize")])  # no sorghum group
     zones = pd.DataFrame({"nisr_district_code": [11], "zone_id": [0]})
 
     result = compute_yield_gap(district_yield, attainable_yield, zones)
     assert pd.isna(result.iloc[0]["yield_gap_kg_ha"])
     assert pd.isna(result.iloc[0]["yield_gap_pct"])
+    assert result.iloc[0]["reliability"] == "suppressed"
     assert result.iloc[0]["reliability"] == "suppressed"
