@@ -82,8 +82,9 @@ def value_label_rows(year: int, variable: str, labels: dict) -> list[dict]:
 
 
 # canonical staging schema columns produced by this module, per src/agritwin/CLAUDE.md,
-# minus yield_kg_ha and qc_flag (owned by clean/, not harmonize/). district_name is left
-# null: no province/district-code -> name crosswalk exists yet (see decisions/plan notes).
+# minus yield_kg_ha and qc_flag (owned by clean/, not harmonize/). district_name starts
+# null here (rename_to_canonical has no crosswalk) and is filled in by run()'s call to
+# attach_district_name() once all years/seasons are stacked.
 OUTPUT_COLUMNS = [
     "year",
     "season",
@@ -288,6 +289,16 @@ def apply_crop_codes(df: pd.DataFrame, code_map: dict[int, str]) -> pd.DataFrame
     is kept (never dropped silently)."""
     df = df.copy()
     df["crop"] = df["crop_code_src"].map(code_map)
+    return df
+
+
+def attach_district_name(df: pd.DataFrame, crosswalk: pd.DataFrame) -> pd.DataFrame:
+    """Fill district_name from the NISR district_code -> name crosswalk (see
+    data/reference/district_crosswalk.csv, loaded by the caller). A district_code with no
+    match keeps district_name null rather than dropping the row."""
+    lookup = crosswalk.set_index("nisr_district_code")["district_name"]
+    df = df.copy()
+    df["district_name"] = df["district_code"].map(lookup)
     return df
 
 

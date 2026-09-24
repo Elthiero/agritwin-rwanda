@@ -7,6 +7,7 @@ import pandas as pd
 from agritwin.harmonize.core import (
     OUTPUT_COLUMNS,
     apply_crop_codes,
+    attach_district_name,
     build_confidence_table,
     join_season_files,
     rename_to_canonical,
@@ -213,3 +214,20 @@ def test_confidence_table_flags_low_confidence_entry():
     assert low.iloc[0]["confidence"] == "low"
     high = table[(table["year"] == 2024) & (table["variable"] == "improved_seed")]
     assert high.iloc[0]["confidence"] == "high"
+
+
+def test_attach_district_name_fills_from_crosswalk():
+    df = _harmonized()  # district_code column: 10, 10, 20
+    crosswalk = pd.DataFrame(
+        {"nisr_district_code": [10, 20], "district_name": ["Alpha", "Beta"]}
+    )
+    result = attach_district_name(df, crosswalk)
+    assert list(result["district_name"]) == ["Alpha", "Alpha", "Beta"]
+
+
+def test_attach_district_name_leaves_unmatched_code_null_row_kept():
+    df = _harmonized()
+    crosswalk = pd.DataFrame({"nisr_district_code": [10], "district_name": ["Alpha"]})
+    result = attach_district_name(df, crosswalk)
+    assert len(result) == len(df)
+    assert result.loc[result["district_code"] == 20, "district_name"].isna().all()

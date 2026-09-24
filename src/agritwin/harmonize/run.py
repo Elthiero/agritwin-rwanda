@@ -15,10 +15,12 @@ import loguru
 import pandas as pd
 
 from agritwin.config import load_crops, load_file_registry, load_settings, load_variable_map
+from agritwin.gee.boundaries import load_district_crosswalk
 from agritwin.harmonize.core import (
     CODED_VARIABLES,
     OUTPUT_COLUMNS,
     apply_crop_codes,
+    attach_district_name,
     build_confidence_table,
     file_for,
     join_season_files,
@@ -100,6 +102,10 @@ def run() -> pd.DataFrame:
             label_rows.extend(harmonize_value_labels(year, season, file_registry, year_map))
 
     stacked = pd.concat(frames, ignore_index=True)
+    stacked = attach_district_name(stacked, load_district_crosswalk())
+    unmatched = stacked["district_name"].isna().sum()
+    if unmatched:
+        logger.warning(f"{unmatched} rows have a district_code with no crosswalk match")
     logger.info(f"stg_sas_plot_crop: {len(stacked)} rows total, {stacked['year'].nunique()} years")
 
     confidence = build_confidence_table(variable_map)
