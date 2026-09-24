@@ -32,6 +32,7 @@ from agritwin.models.drivers import (
 )
 from agritwin.models.nowcast import (
     attach_lagged_yield,
+    build_yield_lookup,
     leave_one_year_out_cv,
     summarize_cv,
 )
@@ -166,6 +167,7 @@ def run_nowcast() -> None:
 
     district_yield = pd.read_parquet(DATA_MARTS / "district_yield.parquet")
     lagged = attach_lagged_yield(district_yield)
+    yield_lookup = build_yield_lookup(district_yield)
 
     nowcast_features = pd.read_csv(
         DATA_EXTERNAL / "gee" / "nowcast_features_district_season_year.csv"
@@ -180,7 +182,12 @@ def run_nowcast() -> None:
         crop_lagged = lagged[lagged["crop"] == crop]
         for lead_months in nowcast_cfg["lead_months"]:
             features_df = build_nowcast_feature_table(
-                crop_lagged, nowcast_features, ndvi_climatology, rainfall_climatology, lead_months
+                crop_lagged,
+                yield_lookup,
+                nowcast_features,
+                ndvi_climatology,
+                rainfall_climatology,
+                lead_months,
             )
             if len(features_df) < 10 or features_df["year"].nunique() < 2:
                 logger.warning(f"{crop} lead={lead_months}mo: too little data, skipped")

@@ -32,57 +32,115 @@ FEATURE_COLUMNS = [
 GROUP_COLS = ["district_code", "crop", "season"]
 
 
-def _prior_season_key(district_code: float, crop: str, season: str, year: int) -> tuple:
+def _one_season_back(season: str, year: int) -> tuple[str, int]:
+    """The single immediately preceding season: Season A's prior is Season B of the
+    previous year; Season B's prior is Season A of the same year."""
     if season == "A":
-        return (district_code, crop, "B", year - 1)
-    return (district_code, crop, "A", year)
+        return "B", year - 1
+    return "A", year
+
+
+def _n_seasons_back(season: str, year: int, n: int) -> tuple[str, int]:
+    for _ in range(n):
+        season, year = _one_season_back(season, year)
+    return season, year
 
 
 def _last_year_key(district_code: float, crop: str, season: str, year: int) -> tuple:
     return (district_code, crop, season, year - 1)
 
 
+def realistic_lookback_seasons(season: str, lead_months: int) -> int:
+    """How many seasons back to look for a prior-production feature that would
+    realistically be published by this lead time's prediction date. Evidenced in
+    docs/nowcast-feature-timing.md: NISR publishes a season's SAS report roughly 3.5 to
+    4 months after that season's data collection concludes (confirmed from the actual
+    PDF creation dates of the real SAS 2025 Season A and Season B reports, not
+    estimated). Season A predictions are safe at every lead time using the immediately
+    preceding season (Season B), which already has months of margin by any Season A
+    prediction date. Season B predictions are NOT safe using the immediately preceding
+    season (Season A of the same year) before lead_months == 4: Season A's own report
+    is not published until ~3.5 months after Season A itself concludes, which lands
+    inside Season B's own growing period, after the lead=2 and lead=3 prediction dates.
+    At those two lead times, Season B falls back two seasons, to the previous year's
+    Season B, which is comfortably published (~mid-October) well before Season B's own
+    lead=2 prediction date (~May 1).
+    """
+    if season == "A":
+        return 1
+    return 1 if lead_months >= 4 else 2
+
+
+def build_yield_lookup(district_yield: pd.DataFrame) -> pd.Series:
+    """(district_code, crop, season, year) -> yield_kg_ha, from survey/'s district-level
+    estimates only. Shared by both lagged-yield attachment functions below."""
+    district_actual = district_yield[district_yield["geo_level"] == "district"].copy()
+    district_actual["district_code"] = district_actual["geo_code"].astype(float)
+    district_actual["year"] = district_actual["year"].astype(int)
+    return district_actual.set_index(["district_code", "crop", "season", "year"])["yield_kg_ha"]
+
+
 def attach_lagged_yield(district_yield: pd.DataFrame) -> pd.DataFrame:
     """One row per district x crop x season x year (from survey/'s district-level
-    estimates only), with two lagged yield columns looked up from the same table:
-    prior_season_yield_kg_ha (the immediately preceding season, a model feature) and
-    last_year_yield_kg_ha (same season, one year earlier, used only for the
-    baseline_last_year comparison, never fed to the model as a feature).
+    estimates only), with last_year_yield_kg_ha (same season, one year earlier) looked
+    up. Used only for the baseline_last_year comparison, never fed to the model as a
+    feature, and always safe at every lead time regardless of season (a full year of
+    margin is far more than the ~3.5-4 month publication lag needs).
+    prior_season_yield_kg_ha is NOT attached here: it depends on lead_months (see
+    attach_prior_season_for_lead), unlike last_year_yield_kg_ha.
     """
     district_actual = district_yield[district_yield["geo_level"] == "district"].copy()
     district_actual["district_code"] = district_actual["geo_code"].astype(float)
     district_actual["year"] = district_actual["year"].astype(int)
 
-    lookup = district_actual.set_index(["district_code", "crop", "season", "year"])[
-        "yield_kg_ha"
-    ]
+    lookup = build_yield_lookup(district_yield)
 
-    def _lookup(row: pd.Series, key_fn) -> float:
-        key = key_fn(row["district_code"], row["crop"], row["season"], row["year"])
+    def _lookup_last_year(row: pd.Series) -> float:
+        key = _last_year_key(row["district_code"], row["crop"], row["season"], row["year"])
         return lookup.get(key, np.nan)
 
-    district_actual["prior_season_yield_kg_ha"] = district_actual.apply(
-        _lookup, axis=1, key_fn=_prior_season_key
-    )
-    district_actual["last_year_yield_kg_ha"] = district_actual.apply(
-        _lookup, axis=1, key_fn=_last_year_key
-    )
+    district_actual["last_year_yield_kg_ha"] = district_actual.apply(_lookup_last_year, axis=1)
     return district_actual
+
+
+def attach_prior_season_for_lead(
+    district_yield_lagged: pd.DataFrame, yield_lookup: pd.Series, lead_months: int
+) -> pd.DataFrame:
+    """Attaches prior_season_yield_kg_ha for one specific lead_months value, using
+    however many seasons back would realistically have been published by that lead
+    time's prediction date (see realistic_lookback_seasons). Must be called once per
+    lead_months, since the same district x crop x season x year row uses a different
+    prior-season source depending on which lead time it is being evaluated at.
+    """
+    out = district_yield_lagged.copy()
+
+    def _lookup_prior(row: pd.Series) -> float:
+        n = realistic_lookback_seasons(row["season"], lead_months)
+        season, year = _n_seasons_back(row["season"], row["year"], n)
+        return yield_lookup.get((row["district_code"], row["crop"], season, year), np.nan)
+
+    out["prior_season_yield_kg_ha"] = out.apply(_lookup_prior, axis=1)
+    return out
 
 
 def build_feature_table(
     district_yield_lagged: pd.DataFrame,
+    yield_lookup: pd.Series,
     nowcast_features: pd.DataFrame,
     ndvi_climatology: pd.DataFrame,
     rainfall_climatology: pd.DataFrame,
     lead_months: int,
 ) -> pd.DataFrame:
-    """Joins one lead time's partial-season NDVI/rainfall (and their climatology
-    anomalies) onto the lagged district_yield table. Inner join on the satellite side:
-    a district x season x year with no satellite extraction has no usable row here.
+    """Attaches this lead time's realistic prior_season_yield_kg_ha, then joins this
+    lead time's partial-season NDVI/rainfall (and their climatology anomalies) onto the
+    lagged district_yield table. Inner join on the satellite side: a district x season x
+    year with no satellite extraction has no usable row here.
     """
+    with_prior_season = attach_prior_season_for_lead(
+        district_yield_lagged, yield_lookup, lead_months
+    )
     feats = nowcast_features[nowcast_features["lead_months"] == lead_months]
-    merged = district_yield_lagged.merge(
+    merged = with_prior_season.merge(
         feats,
         left_on=["district_code", "season", "year"],
         right_on=["nisr_district_code", "season", "year"],

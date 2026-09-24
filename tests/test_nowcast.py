@@ -9,8 +9,11 @@ import pytest
 from agritwin.models.nowcast import (
     FEATURE_COLUMNS,
     attach_lagged_yield,
+    attach_prior_season_for_lead,
     build_feature_table,
+    build_yield_lookup,
     leave_one_year_out_cv,
+    realistic_lookback_seasons,
     summarize_cv,
 )
 
@@ -30,28 +33,60 @@ def _district_yield_row(**overrides) -> dict:
     return base
 
 
-def test_attach_lagged_yield_prior_season_wraps_to_previous_year_for_season_a():
+def test_realistic_lookback_seasons_season_a_is_always_one_season_back():
+    # Season A predictions are always safe using the immediately preceding season
+    # (Season B), which already has months of margin at every lead time.
+    assert realistic_lookback_seasons("A", lead_months=2) == 1
+    assert realistic_lookback_seasons("A", lead_months=3) == 1
+    assert realistic_lookback_seasons("A", lead_months=4) == 1
+
+
+def test_realistic_lookback_seasons_season_b_falls_back_two_seasons_at_short_leads():
+    # Season B at lead=2 or lead=3 cannot safely use Season A of the same year (Season
+    # A's own report is not published until ~3.5 months after Season A concludes,
+    # which lands inside Season B itself); must fall back two seasons instead. At
+    # lead=4, Season A of the same year is safe again.
+    assert realistic_lookback_seasons("B", lead_months=2) == 2
+    assert realistic_lookback_seasons("B", lead_months=3) == 2
+    assert realistic_lookback_seasons("B", lead_months=4) == 1
+
+
+def test_attach_prior_season_for_lead_season_a_uses_immediately_prior_season_b():
     district_yield = pd.DataFrame(
         [
             _district_yield_row(season="B", year="2023", yield_kg_ha=700.0),
             _district_yield_row(season="A", year="2024", yield_kg_ha=1000.0),
         ]
     )
+    lookup = build_yield_lookup(district_yield)
     lagged = attach_lagged_yield(district_yield)
-    row_a_2024 = lagged[(lagged.season == "A") & (lagged.year == 2024)].iloc[0]
+    with_prior = attach_prior_season_for_lead(lagged, lookup, lead_months=2)
+    row_a_2024 = with_prior[(with_prior.season == "A") & (with_prior.year == 2024)].iloc[0]
     assert row_a_2024["prior_season_yield_kg_ha"] == 700.0
 
 
-def test_attach_lagged_yield_prior_season_same_year_for_season_b():
+def test_attach_prior_season_for_lead_season_b_short_lead_uses_two_seasons_back():
     district_yield = pd.DataFrame(
         [
-            _district_yield_row(season="A", year="2024", yield_kg_ha=900.0),
+            _district_yield_row(season="B", year="2023", yield_kg_ha=600.0),  # 2 back
+            _district_yield_row(season="A", year="2024", yield_kg_ha=900.0),  # 1 back
             _district_yield_row(season="B", year="2024", yield_kg_ha=1100.0),
         ]
     )
+    lookup = build_yield_lookup(district_yield)
     lagged = attach_lagged_yield(district_yield)
-    row_b_2024 = lagged[(lagged.season == "B") & (lagged.year == 2024)].iloc[0]
-    assert row_b_2024["prior_season_yield_kg_ha"] == 900.0
+
+    with_prior_short = attach_prior_season_for_lead(lagged, lookup, lead_months=2)
+    row_short = with_prior_short[
+        (with_prior_short.season == "B") & (with_prior_short.year == 2024)
+    ].iloc[0]
+    assert row_short["prior_season_yield_kg_ha"] == 600.0  # two seasons back, not 900.0
+
+    with_prior_long = attach_prior_season_for_lead(lagged, lookup, lead_months=4)
+    row_long = with_prior_long[
+        (with_prior_long.season == "B") & (with_prior_long.year == 2024)
+    ].iloc[0]
+    assert row_long["prior_season_yield_kg_ha"] == 900.0  # one season back, safe at lead=4
 
 
 def test_attach_lagged_yield_last_year_is_same_season_one_year_earlier():
@@ -69,8 +104,15 @@ def test_attach_lagged_yield_last_year_is_same_season_one_year_earlier():
 def test_attach_lagged_yield_missing_lag_is_null_not_zero():
     district_yield = pd.DataFrame([_district_yield_row(season="A", year="2019")])
     lagged = attach_lagged_yield(district_yield)
-    assert pd.isna(lagged.iloc[0]["prior_season_yield_kg_ha"])
     assert pd.isna(lagged.iloc[0]["last_year_yield_kg_ha"])
+
+
+def test_attach_prior_season_for_lead_missing_lag_is_null_not_zero():
+    district_yield = pd.DataFrame([_district_yield_row(season="A", year="2019")])
+    lookup = build_yield_lookup(district_yield)
+    lagged = attach_lagged_yield(district_yield)
+    with_prior = attach_prior_season_for_lead(lagged, lookup, lead_months=2)
+    assert pd.isna(with_prior.iloc[0]["prior_season_yield_kg_ha"])
 
 
 def test_attach_lagged_yield_excludes_non_district_rows():
@@ -82,9 +124,9 @@ def test_attach_lagged_yield_excludes_non_district_rows():
 
 
 def test_build_feature_table_computes_anomalies_and_filters_by_lead_months():
-    district_yield_lagged = attach_lagged_yield(
-        pd.DataFrame([_district_yield_row(season="A", year="2024")])
-    )
+    district_yield = pd.DataFrame([_district_yield_row(season="A", year="2024")])
+    district_yield_lagged = attach_lagged_yield(district_yield)
+    yield_lookup = build_yield_lookup(district_yield)
     nowcast_features = pd.DataFrame(
         [
             {
@@ -114,7 +156,7 @@ def test_build_feature_table_computes_anomalies_and_filters_by_lead_months():
         [{"nisr_district_code": 11.0, "season": "A", "rainfall_climatology_mm": 450.0}]
     )
     features = build_feature_table(
-        district_yield_lagged, nowcast_features, ndvi_clim, rain_clim, lead_months=2
+        district_yield_lagged, yield_lookup, nowcast_features, ndvi_clim, rain_clim, lead_months=2
     )
     assert len(features) == 1
     assert features.iloc[0]["ndvi_anomaly"] == pytest.approx(0.05)
