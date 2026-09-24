@@ -476,7 +476,7 @@ Every AI-assisted change was reviewed, run and tested by a team member before me
 ```markdown
 # AgriTwin Rwanda
 
-Yield gap and early harvest estimator for Rwanda. Built for the NISR 2026 Big Data Hackathon, Track 1 (Agricultural Productivity).
+Early-season crop yield intelligence and yield-gap analysis for Rwanda. Built for the NISR 2026 Big Data Hackathon, Track 1 (Agricultural Productivity).
 Submission deadline: 30 October 2026, 23:59. Internal target: 28 October 2026.
 Team of two: Ahourdet Donambi Thierry (data engineering, API, frontend, deployment) and Ishimwe Aime Cesar (survey methodology, validation, Kinyarwanda, domain research).
 
@@ -661,7 +661,7 @@ Team members: Ahourdet Donambi Thierry (thierrydonambi@gmail.com), Ishimwe Aime 
 ```markdown
 # AgriTwin Rwanda
 
-Yield gap and early harvest estimator for Rwanda. Built for the NISR 2026 Big Data Hackathon (Track 1, Agricultural Productivity).
+Early-season crop yield intelligence and yield-gap analysis for Rwanda. Built for the NISR 2026 Big Data Hackathon (Track 1, Agricultural Productivity).
 
 - Problem, users and methodology: see `docs/AgriTwin_Master_Build_Guide.md` and the deployed docs site.
 - Live app: <deployed web URL>
@@ -723,7 +723,7 @@ services:
 [project]
 name = "agritwin"
 version = "0.1.0"
-description = "AgriTwin Rwanda: yield gap and early harvest estimator (NISR 2026 Big Data Hackathon)"
+description = "AgriTwin Rwanda: early-season crop yield intelligence and yield-gap analysis (NISR 2026 Big Data Hackathon)"
 requires-python = ">=3.12"
 # Runtime and dev dependencies live in requirements.txt / requirements-dev.txt,
 # not here. This file exists so `pip install -e .` makes the `agritwin`

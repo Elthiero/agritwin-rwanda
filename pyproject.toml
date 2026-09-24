@@ -1,7 +1,7 @@
 [project]
 name = "agritwin"
 version = "0.1.0"
-description = "AgriTwin Rwanda: yield gap and early harvest estimator (NISR 2026 Big Data Hackathon)"
+description = "AgriTwin Rwanda: early-season crop yield intelligence and yield-gap analysis (NISR 2026 Big Data Hackathon)"
 requires-python = ">=3.12"
 # Runtime and dev dependencies live in requirements.txt / requirements-dev.txt,
 # not here. This file exists so `pip install -e .` makes the `agritwin`

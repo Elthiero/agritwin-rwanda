@@ -1,6 +1,6 @@
 # AgriTwin Rwanda
 
-**Yield gap and early harvest estimator for Rwanda.**
+**Early-season crop yield intelligence and yield-gap analysis for Rwanda.**
 
 Built for the [NISR 2026 Big Data Hackathon](https://statistics.gov.rw/about/hackathon/2026-hackathon-competition), Track 1 (Agricultural Productivity).
 

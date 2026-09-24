@@ -26,7 +26,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
         title="AgriTwin Rwanda",
-        description="Yield gap and early harvest estimator for Rwanda",
+        description="Early-season crop yield intelligence and yield-gap analysis for Rwanda",
         version="1.0.0",
         lifespan=lifespan,
     )
