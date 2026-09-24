@@ -4,7 +4,6 @@ This project used AI assistants during development, as permitted by the NISR 202
 
 ## Tools used
 - Claude (Anthropic), via Claude Code and claude.ai: pipeline code, API code, frontend code, documentation drafting, and this build plan.
-- <add any other tool used: ChatGPT, GitHub Copilot, etc., and what for>
 
 ## What AI was used for
 - Scaffolding and boilerplate for the data pipeline, API and frontend.
