@@ -95,3 +95,89 @@ def test_run_wires_settings_and_writes_expected_outputs(monkeypatch, tmp_path):
     assert any("yield_gap.parquet" in p for p in written)
     assert any("district_zones.csv" in p for p in written)
     assert any("yield_gap.csv" in p for p in written)
+
+
+def test_run_drivers_writes_artifacts_and_public_csvs(monkeypatch, tmp_path):
+    import agritwin.models.run as run_module
+
+    rng = __import__("numpy").random.default_rng(0)
+    rows = []
+    for district in [11, 12]:
+        for i in range(15):
+            improved = rng.random() > 0.5
+            base = 800.0 + (300.0 if improved else 0.0) + rng.normal(0, 50)
+            rows.append(
+                {
+                    "district_code": float(district),
+                    "crop": "maize",
+                    "season": "A",
+                    "year": 2024,
+                    "stratum": 10.0,
+                    "segment_id": district * 100 + i,
+                    "plot_id": i,
+                    "weight": 1.0,
+                    "harvest_kg": max(base * 0.2, 1.0),
+                    "plot_area_ha": 0.2,
+                    "yield_kg_ha": max(base, 1.0),
+                    "qc_flag": "ok",
+                    "improved_seed": improved,
+                    "organic_fert": True,
+                    "inorganic_fert": False,
+                    "pesticide": False,
+                    "anti_erosion": True,
+                    "land_consolidation": False,
+                    "mechanized": None,
+                    "irrigated": False,
+                    "erosion_degree": 2.0,
+                    "sowing_month": 3,
+                }
+            )
+    plot_crop = pd.DataFrame(rows)
+    soil = pd.DataFrame(
+        {
+            "nisr_district_code": [11, 12],
+            "soil_ph": [5.5, 6.0],
+            "soil_nitrogen": [1.2, 1.5],
+            "soil_carbon": [15.0, 18.0],
+            "soil_texture_class": [4.0, 5.0],
+        }
+    )
+    rainfall = pd.DataFrame(
+        {
+            "nisr_district_code": [11, 12],
+            "season": ["A", "A"],
+            "year": [2024, 2024],
+            "rainfall_mm": [450.0, 480.0],
+        }
+    )
+    fake_settings = {
+        "scope": {"crops": ["maize"]},
+        "drivers": {
+            "n_splits": 2,
+            "min_plots": 5,
+            "target": "log_yield",
+            "cv": "group_kfold_district",
+        },
+        "project": {"data_version": "test"},
+    }
+
+    monkeypatch.setattr(run_module, "load_settings", lambda: fake_settings)
+    monkeypatch.setattr(run_module, "ARTIFACTS", tmp_path / "artifacts")
+    monkeypatch.setattr(
+        pd, "read_csv", lambda path: soil if "soil" in str(path) else rainfall
+    )
+    monkeypatch.setattr(pd, "read_parquet", lambda path: plot_crop)
+
+    written: dict[str, pd.DataFrame] = {}
+
+    def _record(self: pd.DataFrame, path: object, **_k: object) -> None:
+        written.setdefault(str(path), self)
+
+    monkeypatch.setattr(pd.DataFrame, "to_csv", _record)
+
+    run_module.run_drivers()
+
+    assert (tmp_path / "artifacts" / "drivers_maize.txt").exists()
+    assert (tmp_path / "artifacts" / "drivers_maize_metadata.json").exists()
+    assert any("drivers.csv" in p for p in written)
+    assert any("drivers_by_district.csv" in p for p in written)
