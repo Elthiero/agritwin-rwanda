@@ -30,6 +30,14 @@ from agritwin.models.drivers import (
     cross_validate,
     fit_final_model,
 )
+from agritwin.models.nowcast import (
+    attach_lagged_yield,
+    leave_one_year_out_cv,
+    summarize_cv,
+)
+from agritwin.models.nowcast import (
+    build_feature_table as build_nowcast_feature_table,
+)
 
 DATA_STAGING = Path(__file__).resolve().parents[3] / "data" / "staging"
 DATA_MARTS = Path(__file__).resolve().parents[3] / "data" / "marts"
@@ -152,9 +160,60 @@ def run_drivers() -> None:
         logger.info("wrote drivers.csv and drivers_by_district.csv")
 
 
+def run_nowcast() -> None:
+    settings = load_settings()
+    nowcast_cfg = settings["nowcast"]
+
+    district_yield = pd.read_parquet(DATA_MARTS / "district_yield.parquet")
+    lagged = attach_lagged_yield(district_yield)
+
+    nowcast_features = pd.read_csv(
+        DATA_EXTERNAL / "gee" / "nowcast_features_district_season_year.csv"
+    )
+    ndvi_climatology = pd.read_csv(DATA_EXTERNAL / "gee" / "ndvi_climatology_district.csv")
+    rainfall_climatology = pd.read_csv(
+        DATA_EXTERNAL / "gee" / "rainfall_climatology_district.csv"
+    )
+
+    backtest_rows = []
+    for crop in settings["scope"]["crops"]:
+        crop_lagged = lagged[lagged["crop"] == crop]
+        for lead_months in nowcast_cfg["lead_months"]:
+            features_df = build_nowcast_feature_table(
+                crop_lagged, nowcast_features, ndvi_climatology, rainfall_climatology, lead_months
+            )
+            if len(features_df) < 10 or features_df["year"].nunique() < 2:
+                logger.warning(f"{crop} lead={lead_months}mo: too little data, skipped")
+                continue
+
+            cv = leave_one_year_out_cv(features_df)
+            if cv.empty:
+                logger.warning(f"{crop} lead={lead_months}mo: no valid CV folds, skipped")
+                continue
+            summary = summarize_cv(cv)
+            logger.info(f"{crop} lead={lead_months}mo nowcast backtest: {summary}")
+
+            for model_name, mape in summary.items():
+                backtest_rows.append(
+                    {
+                        "crop": crop,
+                        "lead_months": lead_months,
+                        "model": model_name.removesuffix("_mape"),
+                        "mape_pct": mape,
+                        "n_years_tested": len(cv),
+                    }
+                )
+
+    DATA_PUBLIC.mkdir(parents=True, exist_ok=True)
+    if backtest_rows:
+        pd.DataFrame(backtest_rows).to_csv(DATA_PUBLIC / "nowcast_backtest.csv", index=False)
+        logger.info(f"wrote nowcast_backtest.csv ({len(backtest_rows)} rows)")
+
+
 def main() -> None:
     run()
     run_drivers()
+    run_nowcast()
 
 
 if __name__ == "__main__":

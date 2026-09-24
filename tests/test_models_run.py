@@ -181,3 +181,101 @@ def test_run_drivers_writes_artifacts_and_public_csvs(monkeypatch, tmp_path):
     assert (tmp_path / "artifacts" / "drivers_maize_metadata.json").exists()
     assert any("drivers.csv" in p for p in written)
     assert any("drivers_by_district.csv" in p for p in written)
+
+
+def test_run_nowcast_writes_backtest_csv(monkeypatch):
+    import agritwin.models.run as run_module
+
+    rng = __import__("numpy").random.default_rng(0)
+    district_rows = []
+    for district in [11, 12, 13, 14, 15, 16]:
+        # season B in year-1 of each season A year, so prior_season_yield_kg_ha (season A's
+        # prior season is season B of the previous year) resolves for every row, matching
+        # real district_yield data where both seasons exist for every year.
+        for year in [2019, 2020, 2021, 2022, 2023, 2024]:
+            district_rows.append(
+                {
+                    "geo_level": "district",
+                    "geo_code": str(district),
+                    "crop": "maize",
+                    "season": "A",
+                    "year": str(year),
+                    "yield_kg_ha": 800.0 + district * 10 + rng.normal(0, 30),
+                }
+            )
+            district_rows.append(
+                {
+                    "geo_level": "district",
+                    "geo_code": str(district),
+                    "crop": "maize",
+                    "season": "B",
+                    "year": str(year),
+                    "yield_kg_ha": 750.0 + district * 10 + rng.normal(0, 30),
+                }
+            )
+    district_yield = pd.DataFrame(district_rows)
+
+    nowcast_rows = []
+    for district in [11, 12, 13, 14, 15, 16]:
+        for year in [2020, 2021, 2022, 2023, 2024]:
+            for lead in [2, 4]:
+                nowcast_rows.append(
+                    {
+                        "nisr_district_code": district,
+                        "season": "A",
+                        "year": year,
+                        "lead_months": lead,
+                        "ndvi_mean": 0.5 + rng.normal(0, 0.02),
+                        "ndvi_peak": 0.65 + rng.normal(0, 0.02),
+                        "rainfall_mm": 400.0 + rng.normal(0, 10),
+                    }
+                )
+    nowcast_features = pd.DataFrame(nowcast_rows)
+    ndvi_climatology = pd.DataFrame(
+        [
+            {"nisr_district_code": d, "season": "A", "ndvi_climatology_mean": 0.5}
+            for d in [11, 12, 13, 14, 15, 16]
+        ]
+    )
+    rainfall_climatology = pd.DataFrame(
+        [
+            {"nisr_district_code": d, "season": "A", "rainfall_climatology_mm": 400.0}
+            for d in [11, 12, 13, 14, 15, 16]
+        ]
+    )
+
+    fake_settings = {
+        "scope": {"crops": ["maize"]},
+        "nowcast": {"lead_months": [2, 4]},
+    }
+
+    def _fake_read_csv(path, **_k):
+        path = str(path)
+        if "ndvi_climatology" in path:
+            return ndvi_climatology
+        if "rainfall_climatology" in path:
+            return rainfall_climatology
+        return nowcast_features
+
+    monkeypatch.setattr(run_module, "load_settings", lambda: fake_settings)
+    monkeypatch.setattr(pd, "read_csv", _fake_read_csv)
+    monkeypatch.setattr(pd, "read_parquet", lambda path: district_yield)
+
+    written: dict[str, pd.DataFrame] = {}
+
+    def _record(self: pd.DataFrame, path: object, **_k: object) -> None:
+        written.setdefault(str(path), self)
+
+    monkeypatch.setattr(pd.DataFrame, "to_csv", _record)
+
+    run_module.run_nowcast()
+
+    assert any("nowcast_backtest.csv" in p for p in written)
+    backtest = next(df for p, df in written.items() if "nowcast_backtest.csv" in p)
+    assert set(backtest["model"]) == {
+        "baseline_district_mean",
+        "baseline_last_year",
+        "ridge",
+        "lgbm",
+    }
+    assert set(backtest["lead_months"]) == {2, 4}
