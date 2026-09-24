@@ -25,7 +25,7 @@ Updated 2026-09-24. Supersedes the 2026-09-23 version of this file, which descri
 - **`src/agritwin/features/gee_mart.py`**: still only joins GEE outputs to each other. The district crosswalk needed to join SAS-derived estimates to it now exists (`data/reference/district_crosswalk.csv`), but the join itself has not been built.
 - **`stg_sas_plot_crop.district_name`**: still null. The crosswalk exists but was never wired into `harmonize/`'s output; `survey/`'s public `geo_code` is still a raw numeric code, not a label.
 - **API**: 3 of ~9 endpoints (`/health`, `/geo/districts`, `/yield-gap`). `/kpis`, `/districts/{code}/profile`, `/drivers`, `/nowcast`, `/nowcast/{code}/curve`, `/backtest`, `/scenario/{code}`, `/briefs/{code}.pdf` are unimplemented. The data for `/drivers` and `/nowcast` already exists in `data/public/`; wiring those two is now mechanical, not blocked on missing data.
-- **Web app**: `tsc`, `eslint`, and `vitest` all pass now (fixed this session; see `docs/decisions.md` 2026-09-24). Still `web/src/App.tsx`, a single component with a MapLibre basemap and a district-count label, with no other real product pages, no routing, and no i18n wired up despite the dependencies being installed. `npm install` succeeds locally, with 12 unaddressed vulnerabilities (unchanged).
+- **Web app**: `tsc`, `eslint`, and `vitest` all pass. First real product page shipped this session: `pages/MapPage.tsx`, a district yield-gap choropleth (crop/season/year filter bar, hover tooltip, low-reliability cells shown grey, "Model-based estimate" badge), routed via `react-router-dom` and backed by TanStack Query hooks in `api/hooks.ts` calling the live `/districts` and `/yield-gap` endpoints. Live-verified in a real browser, not just unit tests. Still only one route; no i18n wired up despite the dependencies being installed, no other pages (`DistrictPage`, `EarlyEstimatePage`, etc. from `web/CLAUDE.md`'s planned structure) exist yet. `npm install` succeeds locally, with 12 unaddressed vulnerabilities (unchanged).
 - **`docs/data/questionnaires/`**: still empty.
 
 ## What is missing vs. the plan
@@ -62,7 +62,7 @@ Judging: Problem relevance, Data and methodology, Tech innovation, Usability, Ta
 
 1. **Wire `/drivers` and `/nowcast` API endpoints** off the data that already exists in `data/public/`. *Usability, Tangible impact.* — **S**, no longer blocked on missing data.
 2. ~~Fix the web app's build/lint/test toolchain~~ — done this session.
-3. **Ship one real end-to-end page**: district picker + yield-gap map, backed by the now-real `/yield-gap` endpoint. First thing a judge will actually click. *Usability, Tangible impact.* — **M**
+3. ~~Ship one real end-to-end page~~ — done this session (yield-gap map). A server-side join so `/districts` and `/yield-gap` share one district-code system (currently patched client-side, see `docs/decisions.md` 2026-09-24) is a worthwhile follow-up, not a blocker.
 4. **Wire `district_name` into `stg_sas_plot_crop`** and `features/gee_mart.py`'s SAS-side join, using the now-built crosswalk. *Data and methodology.* — **M**
 5. **`models/scenario.py`**: precomputed lever grid for the scenario explorer. *Tech innovation.* — **M**
 6. **`export/`**: formalize the public-output step (PDF briefs, per-crop GeoJSON), or make an explicit decision to keep the current `models/run.py`-writes-directly-to-`data/public/` pattern instead. *Tangible impact.* — **M**
