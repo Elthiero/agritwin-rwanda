@@ -49,5 +49,6 @@ Full source records, catalog IDs, and access notes are maintained in
   2026-09-23 for why both GAUL and HDX boundaries are retained side by side). Subject to
   FAO GAUL's own terms; see the dataset's Earth Engine catalog entry.
 
-No LICENSE file for this project's own original code has been chosen yet; this NOTICE
-covers IP transfer and third-party data attribution only. See `docs/STATUS.md` for that gap.
+This project's own original code is licensed under the MIT License (see `LICENSE`),
+which governs use of the code up to the point of submission; the IP transfer above
+takes precedence after that, per the hackathon rules.

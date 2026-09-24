@@ -43,7 +43,7 @@ Updated 2026-09-24. Supersedes the 2026-09-23 version of this file, which descri
 2. **No secrets in git history.** Re-confirmed. **Clean.**
 3. **AI disclosure**: `docs/ai-usage-log.md` now has a real entry per session (previously flagged as empty). `AI_DISCLOSURE.md` and `ORIGINALITY.md` remain substantive.
 4. **`NOTICE` now exists** (IP transfer to NISR + third-party data licenses), resolving the previous audit's finding.
-5. **No LICENSE file yet** for the project's own original code. Being addressed as a separate step in this session (external-review Step 7); not yet finalized as of this write-up.
+5. **`LICENSE` now exists** (MIT, confirmed with the team; the hackathon's own IP-transfer rule was independently checked live against the actual NISR hackathon page and imposes no constraint on which license the repo displays before submission), resolving the previous finding.
 6. **No code that looks copied from elsewhere**, same finding as before, re-confirmed against everything built since.
 7. **`web/` npm audit**: 12 vulnerabilities (3 critical, 7 high, 2 moderate), still not triaged.
 
@@ -67,6 +67,6 @@ Judging: Problem relevance, Data and methodology, Tech innovation, Usability, Ta
 5. **`models/scenario.py`**: precomputed lever grid for the scenario explorer. *Tech innovation.* — **M**
 6. **`export/`**: formalize the public-output step (PDF briefs, per-crop GeoJSON), or make an explicit decision to keep the current `models/run.py`-writes-directly-to-`data/public/` pattern instead. *Tangible impact.* — **M**
 7. **Investigate why sorghum's driver model and the nowcast overall don't beat baseline**, rather than treating the current honest-but-null result as final. Candidates already logged in `docs/decisions.md`: sample size, spatial aggregation smoothing, insufficient hyperparameter tuning. *Data and methodology.* — **L**
-8. **LICENSE file** (in progress this session). *Compliance.* — **S**
+8. ~~LICENSE file~~ — done this session (MIT).
 9. **Deploy and smoke-test** the API and web app somewhere real, per the project's own "deploy by hand, early and often" development method, not yet done at all. *Tangible impact.* — **M**
 10. **`docs/data/questionnaires/`**: request the SAS questionnaire PDFs from NISR to independently confirm the 2025 low-confidence column matches and the 2021 stratum-code resolution. *Data and methodology.* — **M**, external dependency
