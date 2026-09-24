@@ -6,6 +6,10 @@
 
 .district-page .masthead {
   align-items: flex-start;
+}
+
+.district-page .masthead-title {
+  display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }

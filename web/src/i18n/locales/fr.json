@@ -1,0 +1,88 @@
+{
+  "app": {
+    "title": "AgriTwin Rwanda",
+    "tagline": "Rendement réel comparé au rendement attainable modélisé, par district.",
+    "modelBadge": "Estimation basée sur un modèle, pas une statistique officielle",
+    "footer": "AgriTwin Rwanda. Hackathon Big Data NISR 2026. Pas des statistiques officielles du NISR.",
+    "backToMap": "← Retour à la carte",
+    "language": "Langue"
+  },
+  "controls": {
+    "crop": "Culture",
+    "season": "Saison",
+    "year": "Année",
+    "previousYear": "Année précédente",
+    "nextYear": "Année suivante",
+    "leadTime": "Délai de prévision"
+  },
+  "crop": {
+    "maize": "Maïs",
+    "beans": "Haricot",
+    "irish_potato": "Pomme de terre",
+    "sorghum": "Sorgho"
+  },
+  "lever": {
+    "improved_seed": "Semence améliorée",
+    "inorganic_fert": "Engrais minéral",
+    "organic_fert": "Engrais organique",
+    "irrigated": "Irrigation"
+  },
+  "reliability": {
+    "ok": "fiable",
+    "use_with_caution": "à utiliser avec prudence",
+    "suppressed": "supprimé"
+  },
+  "map": {
+    "loading": "Chargement des données du district…",
+    "error": "Impossible de charger cette vue : {{message}}",
+    "legendTitle": "Écart de rendement : réel vs. attainable",
+    "legendSmallGap": "Faible écart",
+    "legendLargeGap": "Écart important",
+    "legendSuppressed": "Gris : trop peu de parcelles enquêtées pour un résultat fiable",
+    "closeDetail": "Fermer le détail du district",
+    "actualYield": "Rendement réel",
+    "attainableYield": "Rendement attainable",
+    "yieldGap": "Écart de rendement",
+    "reliabilityNote": "Fiabilité : {{reliability}}. Trop peu de parcelles enquêtées pour une estimation précise.",
+    "noData": "Aucune donnée pour {{crop}} en saison {{season}} {{year}} ici.",
+    "viewFullProfile": "Voir le profil complet du district"
+  },
+  "district": {
+    "invalidCode": "Code de district invalide.",
+    "loading": "Chargement du profil du district…",
+    "error": "Impossible de charger ce district : {{message}}",
+    "yieldTrendTitle": "Évolution du rendement",
+    "yieldTrendCaption": "Rendement réel pondéré au niveau du district pour {{crop}}, saison {{season}}, par année.",
+    "yieldTrendEmpty": "Aucune année avec des données exploitables pour cette culture et cette saison.",
+    "gapTrendTitle": "Évolution de l'écart de rendement",
+    "gapTrendCaption": "Rendement réel comparé au rendement attainable modélisé : la marge de progression de ce district.",
+    "gapTrendEmpty": "Aucune année avec un écart calculé pour cette culture et cette saison.",
+    "columnYear": "Année",
+    "columnYield": "Rendement",
+    "columnGap": "Écart",
+    "columnReliability": "Fiabilité",
+    "driversTitle": "Principales pratiques associées",
+    "driversCaption": "Associations issues du modèle explicatif (SHAP), pas des effets causaux (règle du projet : \"associé à\", jamais \"cause\" ou \"augmente le rendement de\").",
+    "driversEmpty": "Données insuffisantes pour classer les facteurs de ce district.",
+    "nowcastTitle": "Estimation précoce du rendement",
+    "nowcastCaption": "Une prédiction validée par validation croisée laissant une année de côté, {{lead}} mois après le début de la saison, pas une prévision en direct : chaque ligne servie aujourd'hui est une donnée historique de test.",
+    "nowcastLoading": "Chargement…",
+    "nowcastEmpty": "Aucune estimation précoce pour {{crop}} en saison {{season}} {{year}} à ce délai.",
+    "predictedYield": "Rendement prédit",
+    "interval": "Intervalle",
+    "intervalRange": "{{low}} à {{high}}",
+    "actualOnceSurveyed": "Réel (une fois enquêté)",
+    "modelUsedNote": "Modèle utilisé : {{model}}, choisi car il avait l'erreur la plus faible en test pour cette culture et ce délai — souvent la simple moyenne du district, pas un modèle plus sophistiqué. Voir la page méthodologie pour la comparaison complète.",
+    "scenarioTitle": "Explorateur de scénarios",
+    "scenarioCaption": "Estimation basée sur un modèle du rendement moyen selon une combinaison hypothétique de pratiques, pas une simulation d'une intervention réelle.",
+    "scenarioLoading": "Chargement…",
+    "scenarioEmpty": "Aucune donnée de scénario pour ce district et cette culture.",
+    "predictedMeanYield": "Rendement moyen prédit",
+    "peersTitle": "Districts comparables",
+    "peersCaption": "Même zone agro-écologique modélisée (un regroupement k-means, en l'absence d'une véritable couche AEZ dans ce projet).",
+    "peersEmpty": "Aucun district comparable trouvé.",
+    "briefTitle": "Fiche du district",
+    "briefCaption": "Un PDF d'une page couvrant les 4 cultures principales pour ce district, généré à l'avance.",
+    "downloadBrief": "Télécharger la fiche PDF"
+  }
+}

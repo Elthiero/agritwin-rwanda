@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useDistrictBoundaries, useYieldGap } from '../api/hooks'
 import type { Crop, Season, YieldGapRow } from '../api/types'
 import { RELIABILITY_GREY, yieldGapColor } from '../lib/colors'
 import { formatKgHa, formatPercent } from '../lib/format'
-import { CROPS, CROP_LABELS, MAX_YEAR, MIN_YEAR, SEASONS } from '../lib/constants'
+import { CROPS, MAX_YEAR, MIN_YEAR, SEASONS } from '../lib/constants'
 import Legend from '../components/Legend'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 
 interface SelectedDistrict {
   code: number
@@ -16,6 +18,7 @@ interface SelectedDistrict {
 }
 
 export default function MapPage() {
+  const { t } = useTranslation()
   const [crop, setCrop] = useState<Crop>('beans')
   const [season, setSeason] = useState<Season>('B')
   const [year, setYear] = useState(2025)
@@ -116,14 +119,17 @@ export default function MapPage() {
   return (
     <div className="shell">
       <header className="masthead">
-        <h1>AgriTwin Rwanda</h1>
-        <p>Actual yield versus the modeled attainable yield, by district.</p>
+        <div>
+          <h1>{t('app.title')}</h1>
+          <p>{t('app.tagline')}</p>
+        </div>
+        <LanguageSwitcher />
       </header>
 
       <div className="controls" role="toolbar" aria-label="Filters">
         <div className="control-group">
           <span className="control-label" id="crop-label">
-            Crop
+            {t('controls.crop')}
           </span>
           <div className="tab-set" role="group" aria-labelledby="crop-label">
             {CROPS.map((c) => (
@@ -133,7 +139,7 @@ export default function MapPage() {
                 aria-pressed={crop === c}
                 onClick={() => setCrop(c)}
               >
-                {CROP_LABELS[c]}
+                {t(`crop.${c}`)}
               </button>
             ))}
           </div>
@@ -141,7 +147,7 @@ export default function MapPage() {
 
         <div className="control-group">
           <span className="control-label" id="season-label">
-            Season
+            {t('controls.season')}
           </span>
           <div className="tab-set" role="group" aria-labelledby="season-label">
             {SEASONS.map((s) => (
@@ -159,12 +165,12 @@ export default function MapPage() {
 
         <div className="control-group">
           <span className="control-label" id="year-label">
-            Year
+            {t('controls.year')}
           </span>
           <div className="stepper" role="group" aria-labelledby="year-label">
             <button
               type="button"
-              aria-label="Previous year"
+              aria-label={t('controls.previousYear')}
               disabled={year <= MIN_YEAR}
               onClick={() => setYear((y) => Math.max(MIN_YEAR, y - 1))}
             >
@@ -173,7 +179,7 @@ export default function MapPage() {
             <span className="year-value">{year}</span>
             <button
               type="button"
-              aria-label="Next year"
+              aria-label={t('controls.nextYear')}
               disabled={year >= MAX_YEAR}
               onClick={() => setYear((y) => Math.min(MAX_YEAR, y + 1))}
             >
@@ -183,12 +189,14 @@ export default function MapPage() {
         </div>
       </div>
 
-      <p className="model-badge">Model-based estimate, not official statistics</p>
+      <p className="model-badge">{t('app.modelBadge')}</p>
 
-      {loading && <p className="status-line">Loading district data…</p>}
+      {loading && <p className="status-line">{t('map.loading')}</p>}
       {error && (
         <p className="status-line error">
-          Could not load this view: {error instanceof Error ? error.message : String(error)}
+          {t('map.error', {
+            message: error instanceof Error ? error.message : String(error),
+          })}
         </p>
       )}
 
@@ -203,7 +211,7 @@ export default function MapPage() {
               <button
                 type="button"
                 className="district-panel-close"
-                aria-label="Close district detail"
+                aria-label={t('map.closeDetail')}
                 onClick={() => setSelected(null)}
               >
                 ✕
@@ -213,38 +221,37 @@ export default function MapPage() {
             {selected.row ? (
               <>
                 <dl>
-                  <dt>Actual yield</dt>
+                  <dt>{t('map.actualYield')}</dt>
                   <dd>{formatKgHa(selected.row.actual_yield_kg_ha)}</dd>
-                  <dt>Attainable yield</dt>
+                  <dt>{t('map.attainableYield')}</dt>
                   <dd>{formatKgHa(selected.row.attainable_yield_kg_ha)}</dd>
-                  <dt>Yield gap</dt>
+                  <dt>{t('map.yieldGap')}</dt>
                   <dd>{formatPercent(selected.row.yield_gap_pct)}</dd>
                 </dl>
                 {selected.row.reliability !== 'ok' && (
                   <p className="reliability-note">
-                    Reliability: {selected.row.reliability.replace(/_/g, ' ')}. Too few
-                    surveyed plots for a precise estimate.
+                    {t('map.reliabilityNote', {
+                      reliability: t(`reliability.${selected.row.reliability}`),
+                    })}
                   </p>
                 )}
               </>
             ) : (
               <p className="district-panel-hint">
-                No data for {CROP_LABELS[crop].toLowerCase()} in Season {season} {year} here.
+                {t('map.noData', { crop: t(`crop.${crop}`).toLowerCase(), season, year })}
               </p>
             )}
             <Link
               className="district-panel-link"
               to={`/districts/${selected.code}?crop=${crop}&season=${season}&year=${year}`}
             >
-              View full district profile
+              {t('map.viewFullProfile')}
             </Link>
           </div>
         )}
       </div>
 
-      <footer className="footer-strip">
-        AgriTwin Rwanda. NISR 2026 Big Data Hackathon. Not official NISR statistics.
-      </footer>
+      <footer className="footer-strip">{t('app.footer')}</footer>
     </div>
   )
 }

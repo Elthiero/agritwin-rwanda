@@ -10,11 +10,31 @@
 .masthead {
   display: flex;
   align-items: baseline;
+  justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
   background: var(--forest);
   color: var(--paper-raised);
   padding: var(--space-4) var(--space-5);
+}
+
+.language-switcher {
+  background: var(--forest-dark);
+}
+
+.language-switcher button {
+  color: var(--paper-raised);
+  opacity: 0.7;
+}
+
+.language-switcher button:hover {
+  opacity: 1;
+}
+
+.language-switcher button[aria-pressed='true'] {
+  background: var(--harvest);
+  color: var(--forest-dark);
+  opacity: 1;
 }
 
 .masthead h1 {

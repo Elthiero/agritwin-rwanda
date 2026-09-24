@@ -1,0 +1,88 @@
+{
+  "app": {
+    "title": "AgriTwin Rwanda",
+    "tagline": "Umusaruro nyawo ugereranyije n'umusaruro ushobora kugerwaho wagenwe na moderi, ku karere.",
+    "modelBadge": "Igereranyo rishingiye kuri moderi, si imibare y'ubutegetsi",
+    "footer": "AgriTwin Rwanda. NISR 2026 Big Data Hackathon. Si imibare y'ubutegetsi ya NISR.",
+    "backToMap": "← Subira ku ikarita",
+    "language": "Ururimi"
+  },
+  "controls": {
+    "crop": "Igihingwa",
+    "season": "Igihembwe",
+    "year": "Umwaka",
+    "previousYear": "Umwaka ubanziriza",
+    "nextYear": "Umwaka ukurikira",
+    "leadTime": "Igihe cyo gutegura"
+  },
+  "crop": {
+    "maize": "Ibigori",
+    "beans": "Ibishyimbo",
+    "irish_potato": "Ibirayi",
+    "sorghum": "Amasaka"
+  },
+  "lever": {
+    "improved_seed": "Imbuto nziza",
+    "inorganic_fert": "Ifumbire mvaruganda",
+    "organic_fert": "Ifumbire kamere",
+    "irrigated": "Ubuhinzi bwuhira"
+  },
+  "reliability": {
+    "ok": "byizewe",
+    "use_with_caution": "koresha witonze",
+    "suppressed": "ntibigaragajwe"
+  },
+  "map": {
+    "loading": "Gutangiza amakuru y'akarere…",
+    "error": "Ntibishoboye gutangiza aya makuru: {{message}}",
+    "legendTitle": "Icyuho cy'umusaruro: nyawo ugereranyije n'ushobora kugerwaho",
+    "legendSmallGap": "Icyuho gito",
+    "legendLargeGap": "Icyuho kinini",
+    "legendSuppressed": "Ubunyu: amasambu make yakorewe ubushakashatsi kugira ngo ibisubizo byizerwe",
+    "closeDetail": "Funga amakuru y'akarere",
+    "actualYield": "Umusaruro nyawo",
+    "attainableYield": "Umusaruro ushobora kugerwaho",
+    "yieldGap": "Icyuho cy'umusaruro",
+    "reliabilityNote": "Kwizerwa: {{reliability}}. Amasambu make yakorewe ubushakashatsi kugira ngo igereranyo riboneke neza.",
+    "noData": "Nta makuru ya {{crop}} mu gihembwe {{season}} {{year}} muri aka karere.",
+    "viewFullProfile": "Reba amakuru yose y'akarere"
+  },
+  "district": {
+    "invalidCode": "Nomero y'akarere siyo.",
+    "loading": "Gutangiza amakuru y'akarere…",
+    "error": "Ntibishoboye gutangiza aka karere: {{message}}",
+    "yieldTrendTitle": "Impinduka z'umusaruro",
+    "yieldTrendCaption": "Umusaruro nyawo w'akarere wa {{crop}}, igihembwe {{season}}, ku myaka.",
+    "yieldTrendEmpty": "Nta myaka ifite amakuru agaragara kuri iki gihingwa n'iki gihembwe.",
+    "gapTrendTitle": "Impinduka z'icyuho cy'umusaruro",
+    "gapTrendCaption": "Umusaruro nyawo ugereranyije n'umusaruro ushobora kugerwaho wagenwe na moderi: uburyo aka karere gashobora kwiyongera.",
+    "gapTrendEmpty": "Nta myaka ifite icyuho cyabazwe kuri iki gihingwa n'iki gihembwe.",
+    "columnYear": "Umwaka",
+    "columnYield": "Umusaruro",
+    "columnGap": "Icyuho",
+    "columnReliability": "Kwizerwa",
+    "driversTitle": "Ingamba ziza zifitanye isano n'umusaruro",
+    "driversCaption": "Isano ivuye muri moderi ya SHAP, si ingaruka zisobanutse (itegeko ry'umushinga: \"bifitanye isano na\", ntabwo ari \"bitera\" cyangwa \"byongera umusaruro na\").",
+    "driversEmpty": "Nta makuru ahagije yo gushyiraho urutonde rw'ibitera muri aka karere.",
+    "nowcastTitle": "Igereranyo ry'umusaruro rya mbere",
+    "nowcastCaption": "Igereranyo ryapimwe hasigaye umwaka umwe, {{lead}} amezi mu gihembwe, ntabwo ari igiteganyo cyo mu gihe nyacyo: buri gice cyerekanwa uyu munsi ni amakuru y'abanje kugenzurwa.",
+    "nowcastLoading": "Gutegura…",
+    "nowcastEmpty": "Nta gereranyo rya mbere kuri {{crop}} mu gihembwe {{season}} {{year}} kuri iki gihe.",
+    "predictedYield": "Umusaruro uteganyijwe",
+    "interval": "Igipimo",
+    "intervalRange": "{{low}} kugeza {{high}}",
+    "actualOnceSurveyed": "Nyawo (nyuma yo gukorwaho ubushakashatsi)",
+    "modelUsedNote": "Moderi yakoreshejwe: {{model}}, yatoranyijwe kuko yari ifite ikosa rito kuri iki gihingwa n'iki gihe — akenshi ni impuzandengo y'akarere, ntabwo ari moderi igoye. Reba urupapuro rw'uburyo bwakoreshejwe kugira ngo ubone igereranya ryuzuye.",
+    "scenarioTitle": "Igenzura ry'ibishoboka",
+    "scenarioCaption": "Igereranyo rishingiye kuri moderi ry'umusaruro impuzandengo mu gihe hifashishijwe ingamba runaka, si igerageza ry'ikintu nyacyo.",
+    "scenarioLoading": "Gutegura…",
+    "scenarioEmpty": "Nta makuru y'ibishoboka kuri aka karere n'iki gihingwa.",
+    "predictedMeanYield": "Umusaruro impuzandengo uteganyijwe",
+    "peersTitle": "Uturere dusa",
+    "peersCaption": "Uturere duri mu karere kamwe ka moderi (gakozwe ukoresheje k-means, kubera ko nta rutonde nyarwo rw'uturere tw'ubuhinzi ruhari muri uyu mushinga).",
+    "peersEmpty": "Nta karere gasa n'aka gasanze.",
+    "briefTitle": "Inyandiko ngufi y'akarere",
+    "briefCaption": "Inyandiko ya PDF y'urupapuro rumwe irimo ibihingwa 4 by'ingenzi muri aka karere, yateguwe mbere y'igihe.",
+    "downloadBrief": "Kuramo inyandiko ya PDF"
+  }
+}

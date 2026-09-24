@@ -1,19 +1,16 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { API_BASE } from '../api/client'
 import { useDistrictProfile, useNowcast, useScenario } from '../api/hooks'
 import type { Crop, Season } from '../api/types'
-import { CROPS, CROP_LABELS, LEAD_MONTHS, MAX_YEAR, MIN_YEAR, SEASONS } from '../lib/constants'
+import { CROPS, LEAD_MONTHS, MAX_YEAR, MIN_YEAR, SEASONS } from '../lib/constants'
 import { formatKgHa, formatPercent } from '../lib/format'
 import { DEFAULT_LEVERS, findScenarioRow, type LeverState } from '../lib/scenario'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 import './DistrictPage.css'
 
-const LEVER_LABELS: Record<keyof LeverState, string> = {
-  improved_seed: 'Improved seed',
-  inorganic_fert: 'Inorganic fertilizer',
-  organic_fert: 'Organic fertilizer',
-  irrigated: 'Irrigation',
-}
+const LEVER_KEYS = Object.keys(DEFAULT_LEVERS) as (keyof LeverState)[]
 
 function isCrop(value: string | null): value is Crop {
   return CROPS.includes(value as Crop)
@@ -24,6 +21,7 @@ function isSeason(value: string | null): value is Season {
 }
 
 export default function DistrictPage() {
+  const { t } = useTranslation()
   const { code } = useParams<{ code: string }>()
   const districtCode = Number(code)
   const [searchParams] = useSearchParams()
@@ -59,7 +57,7 @@ export default function DistrictPage() {
   if (!Number.isFinite(districtCode)) {
     return (
       <div className="district-page">
-        <p className="status-line error">Invalid district code.</p>
+        <p className="status-line error">{t('district.invalidCode')}</p>
       </div>
     )
   }
@@ -67,23 +65,24 @@ export default function DistrictPage() {
   return (
     <div className="district-page">
       <header className="masthead">
-        <div>
+        <div className="masthead-title">
           <Link className="back-link" to="/">
-            ← Back to map
+            {t('app.backToMap')}
           </Link>
           <h1>{profile.data?.district_name ?? `District ${districtCode}`}</h1>
         </div>
+        <LanguageSwitcher />
       </header>
 
       <div className="controls" role="toolbar" aria-label="Filters">
         <div className="control-group">
           <span className="control-label" id="dp-crop-label">
-            Crop
+            {t('controls.crop')}
           </span>
           <div className="tab-set" role="group" aria-labelledby="dp-crop-label">
             {CROPS.map((c) => (
               <button key={c} type="button" aria-pressed={crop === c} onClick={() => setCrop(c)}>
-                {CROP_LABELS[c]}
+                {t(`crop.${c}`)}
               </button>
             ))}
           </div>
@@ -91,7 +90,7 @@ export default function DistrictPage() {
 
         <div className="control-group">
           <span className="control-label" id="dp-season-label">
-            Season
+            {t('controls.season')}
           </span>
           <div className="tab-set" role="group" aria-labelledby="dp-season-label">
             {SEASONS.map((s) => (
@@ -109,12 +108,12 @@ export default function DistrictPage() {
 
         <div className="control-group">
           <span className="control-label" id="dp-year-label">
-            Year
+            {t('controls.year')}
           </span>
           <div className="stepper" role="group" aria-labelledby="dp-year-label">
             <button
               type="button"
-              aria-label="Previous year"
+              aria-label={t('controls.previousYear')}
               disabled={year <= MIN_YEAR}
               onClick={() => setYear((y) => Math.max(MIN_YEAR, y - 1))}
             >
@@ -123,7 +122,7 @@ export default function DistrictPage() {
             <span className="year-value">{year}</span>
             <button
               type="button"
-              aria-label="Next year"
+              aria-label={t('controls.nextYear')}
               disabled={year >= MAX_YEAR}
               onClick={() => setYear((y) => Math.min(MAX_YEAR, y + 1))}
             >
@@ -133,32 +132,33 @@ export default function DistrictPage() {
         </div>
       </div>
 
-      <p className="model-badge">Model-based estimate, not official statistics</p>
+      <p className="model-badge">{t('app.modelBadge')}</p>
 
-      {loading && <p className="status-line">Loading district profile…</p>}
+      {loading && <p className="status-line">{t('district.loading')}</p>}
       {error && (
         <p className="status-line error">
-          Could not load this district: {error instanceof Error ? error.message : String(error)}
+          {t('district.error', {
+            message: error instanceof Error ? error.message : String(error),
+          })}
         </p>
       )}
 
       {profile.data && (
         <div className="district-grid">
           <section className="card">
-            <h2>Yield trend</h2>
+            <h2>{t('district.yieldTrendTitle')}</h2>
             <p className="card-caption">
-              Weighted district-level actual yield for {CROP_LABELS[crop].toLowerCase()}, Season{' '}
-              {season}, by year.
+              {t('district.yieldTrendCaption', { crop: t(`crop.${crop}`), season })}
             </p>
             {profile.data.yield_trend.length === 0 ? (
-              <p className="card-empty">No years with usable data for this crop and season.</p>
+              <p className="card-empty">{t('district.yieldTrendEmpty')}</p>
             ) : (
               <table className="trend-table">
                 <thead>
                   <tr>
-                    <th>Year</th>
-                    <th>Yield</th>
-                    <th>Reliability</th>
+                    <th>{t('district.columnYear')}</th>
+                    <th>{t('district.columnYield')}</th>
+                    <th>{t('district.columnReliability')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -167,7 +167,7 @@ export default function DistrictPage() {
                       <td>{row.year}</td>
                       <td>{formatKgHa(row.yield_kg_ha)}</td>
                       <td className={row.reliability !== 'ok' ? 'reliability-flag' : undefined}>
-                        {row.reliability.replace(/_/g, ' ')}
+                        {t(`reliability.${row.reliability}`)}
                       </td>
                     </tr>
                   ))}
@@ -177,20 +177,17 @@ export default function DistrictPage() {
           </section>
 
           <section className="card">
-            <h2>Yield gap trend</h2>
-            <p className="card-caption">
-              Actual yield versus modeled attainable yield: how much room this district has to
-              close the gap.
-            </p>
+            <h2>{t('district.gapTrendTitle')}</h2>
+            <p className="card-caption">{t('district.gapTrendCaption')}</p>
             {profile.data.gap_trend.length === 0 ? (
-              <p className="card-empty">No years with a computed gap for this crop and season.</p>
+              <p className="card-empty">{t('district.gapTrendEmpty')}</p>
             ) : (
               <table className="trend-table">
                 <thead>
                   <tr>
-                    <th>Year</th>
-                    <th>Gap</th>
-                    <th>Reliability</th>
+                    <th>{t('district.columnYear')}</th>
+                    <th>{t('district.columnGap')}</th>
+                    <th>{t('district.columnReliability')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -199,7 +196,7 @@ export default function DistrictPage() {
                       <td>{row.year}</td>
                       <td>{formatPercent(row.yield_gap_pct)}</td>
                       <td className={row.reliability !== 'ok' ? 'reliability-flag' : undefined}>
-                        {row.reliability.replace(/_/g, ' ')}
+                        {t(`reliability.${row.reliability}`)}
                       </td>
                     </tr>
                   ))}
@@ -209,13 +206,10 @@ export default function DistrictPage() {
           </section>
 
           <section className="card">
-            <h2>Top associated practices</h2>
-            <p className="card-caption">
-              SHAP-based associations from the driver model, not causal effects (per project
-              rule: "associated with", never "causes" or "increases yield by").
-            </p>
+            <h2>{t('district.driversTitle')}</h2>
+            <p className="card-caption">{t('district.driversCaption')}</p>
             {profile.data.top_drivers.length === 0 ? (
-              <p className="card-empty">Not enough data to rank drivers for this district.</p>
+              <p className="card-empty">{t('district.driversEmpty')}</p>
             ) : (
               <ul className="driver-list">
                 {profile.data.top_drivers.map((driver) => (
@@ -231,89 +225,82 @@ export default function DistrictPage() {
           </section>
 
           <section className="card">
-            <h2>Early yield estimate</h2>
-            <p className="card-caption">
-              A leave-one-year-out backtest prediction, {lead} months into the season, not a live
-              in-season forecast: every row served today is historical hold-out data.
-            </p>
-            <div className="lead-picker" role="group" aria-label="Lead time">
+            <h2>{t('district.nowcastTitle')}</h2>
+            <p className="card-caption">{t('district.nowcastCaption', { lead })}</p>
+            <div className="lead-picker" role="group" aria-label={t('controls.leadTime')}>
               {LEAD_MONTHS.map((m) => (
                 <button key={m} type="button" aria-pressed={lead === m} onClick={() => setLead(m)}>
                   {m} mo
                 </button>
               ))}
             </div>
-            {nowcast.isLoading && <p className="card-empty">Loading…</p>}
+            {nowcast.isLoading && <p className="card-empty">{t('district.nowcastLoading')}</p>}
             {!nowcast.isLoading && !nowcastRow && (
               <p className="card-empty">
-                No early estimate for {CROP_LABELS[crop].toLowerCase()} in Season {season} {year}{' '}
-                at this lead time.
+                {t('district.nowcastEmpty', { crop: t(`crop.${crop}`), season, year })}
               </p>
             )}
             {nowcastRow && (
               <>
                 <dl>
-                  <dt>Predicted yield</dt>
+                  <dt>{t('district.predictedYield')}</dt>
                   <dd>{formatKgHa(nowcastRow.predicted_yield_kg_ha)}</dd>
-                  <dt>Interval</dt>
+                  <dt>{t('district.interval')}</dt>
                   <dd>
-                    {formatKgHa(nowcastRow.ci_low)} to {formatKgHa(nowcastRow.ci_high)}
+                    {t('district.intervalRange', {
+                      low: formatKgHa(nowcastRow.ci_low),
+                      high: formatKgHa(nowcastRow.ci_high),
+                    })}
                   </dd>
-                  <dt>Actual (once surveyed)</dt>
+                  <dt>{t('district.actualOnceSurveyed')}</dt>
                   <dd>{formatKgHa(nowcastRow.actual_yield_kg_ha)}</dd>
                 </dl>
                 <p className="card-note">
-                  Model used: {nowcastRow.model.replace(/_/g, ' ')}, chosen because it had the
-                  lowest backtest error for this crop and lead time — often the simple
-                  district-average baseline, not a fancier model. See the methodology page for
-                  the full honest comparison.
+                  {t('district.modelUsedNote', { model: nowcastRow.model.replace(/_/g, ' ') })}
                 </p>
               </>
             )}
           </section>
 
           <section className="card">
-            <h2>Scenario explorer</h2>
-            <p className="card-caption">
-              Model-based estimate of mean yield under a hypothetical combination of practices,
-              not a simulation of a real intervention.
-            </p>
+            <h2>{t('district.scenarioTitle')}</h2>
+            <p className="card-caption">{t('district.scenarioCaption')}</p>
             <div className="lever-toggles">
-              {(Object.keys(LEVER_LABELS) as (keyof LeverState)[]).map((key) => (
+              {LEVER_KEYS.map((key) => (
                 <label key={key} className="lever-toggle">
                   <input
                     type="checkbox"
                     checked={levers[key]}
                     onChange={(e) => setLevers((l) => ({ ...l, [key]: e.target.checked }))}
                   />
-                  {LEVER_LABELS[key]}
+                  {t(`lever.${key}`)}
                 </label>
               ))}
             </div>
-            {scenario.isLoading && <p className="card-empty">Loading…</p>}
+            {scenario.isLoading && <p className="card-empty">{t('district.scenarioLoading')}</p>}
             {!scenario.isLoading && !scenarioRow && (
-              <p className="card-empty">No scenario data for this district and crop.</p>
+              <p className="card-empty">{t('district.scenarioEmpty')}</p>
             )}
             {scenarioRow && (
               <dl>
-                <dt>Predicted mean yield</dt>
+                <dt>{t('district.predictedMeanYield')}</dt>
                 <dd>{formatKgHa(scenarioRow.mean_yield_kg_ha)}</dd>
-                <dt>Interval</dt>
+                <dt>{t('district.interval')}</dt>
                 <dd>
-                  {formatKgHa(scenarioRow.ci_low)} to {formatKgHa(scenarioRow.ci_high)}
+                  {t('district.intervalRange', {
+                    low: formatKgHa(scenarioRow.ci_low),
+                    high: formatKgHa(scenarioRow.ci_high),
+                  })}
                 </dd>
               </dl>
             )}
           </section>
 
           <section className="card">
-            <h2>Peer districts</h2>
-            <p className="card-caption">
-              Same modeled agro-ecological zone (a k-means grouping, since no real AEZ layer is
-              configured in this project).
-            </p>
+            <h2>{t('district.peersTitle')}</h2>
+            <p className="card-caption">{t('district.peersCaption')}</p>
             {profile.data.peer_districts.length === 0 ? (
-              <p className="card-empty">No peer districts found.</p>
+              <p className="card-empty">{t('district.peersEmpty')}</p>
             ) : (
               <ul className="peer-list">
                 {profile.data.peer_districts.map((peer) => (
@@ -330,25 +317,21 @@ export default function DistrictPage() {
           </section>
 
           <section className="card">
-            <h2>District brief</h2>
-            <p className="card-caption">
-              A one-page PDF covering all 4 MVP crops for this district, generated ahead of time.
-            </p>
+            <h2>{t('district.briefTitle')}</h2>
+            <p className="card-caption">{t('district.briefCaption')}</p>
             <a
               className="brief-link"
               href={`${API_BASE}/briefs/${districtCode}.pdf`}
               target="_blank"
               rel="noreferrer"
             >
-              Download PDF brief
+              {t('district.downloadBrief')}
             </a>
           </section>
         </div>
       )}
 
-      <footer className="footer-strip">
-        AgriTwin Rwanda. NISR 2026 Big Data Hackathon. Not official NISR statistics.
-      </footer>
+      <footer className="footer-strip">{t('app.footer')}</footer>
     </div>
   )
 }

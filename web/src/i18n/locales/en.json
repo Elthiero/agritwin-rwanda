@@ -1,0 +1,88 @@
+{
+  "app": {
+    "title": "AgriTwin Rwanda",
+    "tagline": "Actual yield versus the modeled attainable yield, by district.",
+    "modelBadge": "Model-based estimate, not official statistics",
+    "footer": "AgriTwin Rwanda. NISR 2026 Big Data Hackathon. Not official NISR statistics.",
+    "backToMap": "← Back to map",
+    "language": "Language"
+  },
+  "controls": {
+    "crop": "Crop",
+    "season": "Season",
+    "year": "Year",
+    "previousYear": "Previous year",
+    "nextYear": "Next year",
+    "leadTime": "Lead time"
+  },
+  "crop": {
+    "maize": "Maize",
+    "beans": "Beans",
+    "irish_potato": "Irish potato",
+    "sorghum": "Sorghum"
+  },
+  "lever": {
+    "improved_seed": "Improved seed",
+    "inorganic_fert": "Inorganic fertilizer",
+    "organic_fert": "Organic fertilizer",
+    "irrigated": "Irrigation"
+  },
+  "reliability": {
+    "ok": "ok",
+    "use_with_caution": "use with caution",
+    "suppressed": "suppressed"
+  },
+  "map": {
+    "loading": "Loading district data…",
+    "error": "Could not load this view: {{message}}",
+    "legendTitle": "Yield gap: actual vs. attainable",
+    "legendSmallGap": "Small gap",
+    "legendLargeGap": "Large gap",
+    "legendSuppressed": "Grey: too few surveyed plots to report reliably",
+    "closeDetail": "Close district detail",
+    "actualYield": "Actual yield",
+    "attainableYield": "Attainable yield",
+    "yieldGap": "Yield gap",
+    "reliabilityNote": "Reliability: {{reliability}}. Too few surveyed plots for a precise estimate.",
+    "noData": "No data for {{crop}} in Season {{season}} {{year}} here.",
+    "viewFullProfile": "View full district profile"
+  },
+  "district": {
+    "invalidCode": "Invalid district code.",
+    "loading": "Loading district profile…",
+    "error": "Could not load this district: {{message}}",
+    "yieldTrendTitle": "Yield trend",
+    "yieldTrendCaption": "Weighted district-level actual yield for {{crop}}, Season {{season}}, by year.",
+    "yieldTrendEmpty": "No years with usable data for this crop and season.",
+    "gapTrendTitle": "Yield gap trend",
+    "gapTrendCaption": "Actual yield versus modeled attainable yield: how much room this district has to close the gap.",
+    "gapTrendEmpty": "No years with a computed gap for this crop and season.",
+    "columnYear": "Year",
+    "columnYield": "Yield",
+    "columnGap": "Gap",
+    "columnReliability": "Reliability",
+    "driversTitle": "Top associated practices",
+    "driversCaption": "SHAP-based associations from the driver model, not causal effects (per project rule: \"associated with\", never \"causes\" or \"increases yield by\").",
+    "driversEmpty": "Not enough data to rank drivers for this district.",
+    "nowcastTitle": "Early yield estimate",
+    "nowcastCaption": "A leave-one-year-out backtest prediction, {{lead}} months into the season, not a live in-season forecast: every row served today is historical hold-out data.",
+    "nowcastLoading": "Loading…",
+    "nowcastEmpty": "No early estimate for {{crop}} in Season {{season}} {{year}} at this lead time.",
+    "predictedYield": "Predicted yield",
+    "interval": "Interval",
+    "intervalRange": "{{low}} to {{high}}",
+    "actualOnceSurveyed": "Actual (once surveyed)",
+    "modelUsedNote": "Model used: {{model}}, chosen because it had the lowest backtest error for this crop and lead time — often the simple district-average baseline, not a fancier model. See the methodology page for the full honest comparison.",
+    "scenarioTitle": "Scenario explorer",
+    "scenarioCaption": "Model-based estimate of mean yield under a hypothetical combination of practices, not a simulation of a real intervention.",
+    "scenarioLoading": "Loading…",
+    "scenarioEmpty": "No scenario data for this district and crop.",
+    "predictedMeanYield": "Predicted mean yield",
+    "peersTitle": "Peer districts",
+    "peersCaption": "Same modeled agro-ecological zone (a k-means grouping, since no real AEZ layer is configured in this project).",
+    "peersEmpty": "No peer districts found.",
+    "briefTitle": "District brief",
+    "briefCaption": "A one-page PDF covering all 4 MVP crops for this district, generated ahead of time.",
+    "downloadBrief": "Download PDF brief"
+  }
+}
