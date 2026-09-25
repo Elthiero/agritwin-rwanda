@@ -7,11 +7,14 @@ import pandas as pd
 
 from agritwin.models.drivers import (
     FEATURE_COLUMNS,
+    HYPERPARAM_CANDIDATES,
     build_feature_table,
     compute_district_shap,
     compute_global_shap,
     cross_validate,
+    cross_validate_nested,
     fit_final_model,
+    select_hyperparams,
 )
 
 RNG = np.random.default_rng(0)
@@ -123,6 +126,42 @@ def test_cross_validate_returns_expected_keys_and_model_beats_baseline():
     }
     # improved_seed has a strong, real effect in the synthetic data, so the model should
     # genuinely beat a constant-mean baseline, not just tie or lose to it.
+    assert metrics["model_mae_log"] < metrics["baseline_mae_log"]
+
+
+def test_select_hyperparams_returns_one_of_the_candidates():
+    plot_crop = _synthetic_plot_crop(n_per_district=20, n_districts=6)
+    features = build_feature_table(plot_crop, _soil_df(6), _rainfall_df(6), crop="maize")
+    config = select_hyperparams(
+        features[FEATURE_COLUMNS], features["log_yield"], features["district_code"], n_splits=3
+    )
+    assert config in HYPERPARAM_CANDIDATES
+
+
+def test_select_hyperparams_falls_back_to_default_with_too_few_groups():
+    plot_crop = _synthetic_plot_crop(n_per_district=20, n_districts=1)
+    features = build_feature_table(plot_crop, _soil_df(1), _rainfall_df(1), crop="maize")
+    config = select_hyperparams(
+        features[FEATURE_COLUMNS], features["log_yield"], features["district_code"], n_splits=3
+    )
+    assert config == HYPERPARAM_CANDIDATES[0]
+
+
+def test_cross_validate_nested_returns_expected_keys_and_model_beats_baseline():
+    plot_crop = _synthetic_plot_crop(n_per_district=20, n_districts=6)
+    features = build_feature_table(plot_crop, _soil_df(6), _rainfall_df(6), crop="maize")
+    metrics = cross_validate_nested(features, n_splits=3, n_inner_splits=2)
+    assert set(metrics) == {
+        "n_splits",
+        "n_inner_splits",
+        "n_rows",
+        "n_districts",
+        "model_mae_log",
+        "baseline_mae_log",
+        "improvement_over_baseline_pct",
+        "chosen_configs_per_fold",
+    }
+    assert len(metrics["chosen_configs_per_fold"]) == 3
     assert metrics["model_mae_log"] < metrics["baseline_mae_log"]
 
 

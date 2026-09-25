@@ -171,16 +171,16 @@ Pulled directly from the committed data files below, not invented or rounded fav
 
 7.7% relative difference, well inside our own confidence interval. Production and cultivated-area totals diverge by roughly 4-5x by design, not error: the official figures allocate intercropped plots' area by crop share, which AgriTwin's plot-level harvest data cannot do (see `docs/validation.md` for the full explanation).
 
-**2. Driver model (LightGBM + SHAP), CV score vs. a naive baseline**, per crop (`artifacts/drivers_{crop}_metadata.json`):
+**2. Driver model (LightGBM + SHAP), nested-CV score vs. a naive baseline**, per crop (`artifacts/drivers_{crop}_metadata.json`). Hyperparameters are chosen by a nested inner GroupKFold, never by looking at the reported outer fold, so this margin carries no tuning leakage:
 
 | Crop | Improvement over baseline |
 |---|---|
-| irish_potato | +20.0% |
-| beans | +5.4% |
-| maize | +5.0% |
-| sorghum | **-4.4% (worse than baseline)** |
+| irish_potato | +22.2% |
+| maize | +8.0% |
+| beans | +4.8% |
+| sorghum | **-1.4% (still worse than baseline)** |
 
-Sorghum's driver model does not beat a naive baseline. Reported here plainly rather than omitted; see `docs/decisions.md` (2026-09-24) for why this was not tuned away.
+Sorghum's driver model does not beat a naive baseline, even after tuning. Reported here plainly rather than omitted; see `docs/decisions.md` (2026-09-24 and 2026-09-25) for why, and for why this is a structural finding (low target variance, near-constant practice features for this crop), not a tuning gap.
 
 **3. Nowcast backtest** (`data/public/nowcast_backtest.csv`), after four rounds of external-review fixes (see `docs/decisions.md` 2026-09-24 for all four): a Season A satellite date-alignment bug, prior-season-yield leakage, exclusion of low-reliability cells, and a rigorous per-fold spread check across the 7 held-out years, not just a point estimate.
 

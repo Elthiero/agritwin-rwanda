@@ -27,8 +27,9 @@ from agritwin.models.drivers import (
     build_feature_table,
     compute_district_shap,
     compute_global_shap,
-    cross_validate,
+    cross_validate_nested,
     fit_final_model,
+    select_hyperparams,
 )
 from agritwin.models.nowcast import (
     MODEL_NAMES,
@@ -136,10 +137,16 @@ def run_drivers() -> None:
             logger.warning(f"{crop}: too few districts for {n_splits}-fold CV, skipped")
             continue
 
-        metrics = cross_validate(features_df, n_splits=drivers_cfg["n_splits"])
+        metrics = cross_validate_nested(features_df, n_splits=drivers_cfg["n_splits"])
         logger.info(f"{crop} driver model: {metrics}")
 
-        model = fit_final_model(features_df)
+        final_params = select_hyperparams(
+            features_df[FEATURE_COLUMNS],
+            features_df["log_yield"],
+            features_df["district_code"],
+            n_splits=metrics["n_inner_splits"],
+        )
+        model = fit_final_model(features_df, params=final_params)
         model.booster_.save_model(str(ARTIFACTS / f"drivers_{crop}.txt"))
         metadata = {
             "crop": crop,
@@ -147,6 +154,7 @@ def run_drivers() -> None:
             "target": drivers_cfg["target"],
             "features": FEATURE_COLUMNS,
             "cv": drivers_cfg["cv"],
+            "final_hyperparams": final_params,
             "metrics": metrics,
             "git_hash": _git_hash(),
             "trained_at": datetime.now(UTC).isoformat(),

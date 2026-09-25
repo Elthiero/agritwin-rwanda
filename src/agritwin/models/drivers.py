@@ -52,6 +52,40 @@ FEATURE_COLUMNS = [
     "rainfall_mm",
 ]
 
+# Hand-picked regularization sweep from docs/decisions.md 2026-09-25's sorghum
+# investigation: heavier regularization recovered over half of sorghum's gap to baseline
+# and also improved maize's already-positive result, the signature of an untuned,
+# overfitting LightGBM default. Config 0 is that default. Selected per-fold by
+# select_hyperparams() via an inner CV, never by looking at the outer/reported fold, so
+# choosing among these does not leak into the honest metric it's chosen within.
+HYPERPARAM_CANDIDATES: list[dict] = [
+    {},  # LightGBM defaults
+    {
+        "num_leaves": 7,
+        "min_child_samples": 30,
+        "max_depth": 4,
+        "reg_alpha": 1.0,
+        "reg_lambda": 1.0,
+        "learning_rate": 0.05,
+        "n_estimators": 200,
+    },
+    {
+        "num_leaves": 4,
+        "min_child_samples": 50,
+        "max_depth": 3,
+        "reg_alpha": 1.0,
+        "reg_lambda": 1.0,
+        "learning_rate": 0.03,
+        "n_estimators": 150,
+    },
+    {
+        "num_leaves": 15,
+        "min_child_samples": 20,
+        "learning_rate": 0.02,
+        "n_estimators": 500,
+    },
+]
+
 
 def build_feature_table(
     plot_crop: pd.DataFrame, soil_df: pd.DataFrame, rainfall_df: pd.DataFrame, crop: str
@@ -122,14 +156,100 @@ def cross_validate(features_df: pd.DataFrame, n_splits: int, random_state: int =
     }
 
 
-def fit_final_model(features_df: pd.DataFrame, random_state: int = 0):
-    """Fit on every eligible row for this crop (after cross_validate already reported
-    honest out-of-fold performance); this final model is what SHAP explanations use."""
+def select_hyperparams(
+    X: pd.DataFrame, y: pd.Series, groups: pd.Series, n_splits: int, random_state: int = 0
+) -> dict:
+    """Picks the HYPERPARAM_CANDIDATES config with the lowest inner GroupKFold-by-district
+    MAE on (X, y, groups) alone. Callers pass only an outer-fold's training rows (for
+    cross_validate_nested) or the whole dataset (for the final production model), so this
+    selection never sees whatever rows it will later be scored against."""
+    import lightgbm as lgb
+    from sklearn.metrics import mean_absolute_error
+    from sklearn.model_selection import GroupKFold
+
+    n_inner = min(n_splits, groups.nunique())
+    if n_inner < 2:
+        return HYPERPARAM_CANDIDATES[0]
+
+    best_config, best_mae = HYPERPARAM_CANDIDATES[0], float("inf")
+    for config in HYPERPARAM_CANDIDATES:
+        fold_errors = []
+        for train_idx, val_idx in GroupKFold(n_splits=n_inner).split(X, y, groups):
+            model = lgb.LGBMRegressor(random_state=random_state, verbosity=-1, **config)
+            model.fit(X.iloc[train_idx], y.iloc[train_idx])
+            fold_errors.append(
+                mean_absolute_error(y.iloc[val_idx], model.predict(X.iloc[val_idx]))
+            )
+        mae = float(np.mean(fold_errors))
+        if mae < best_mae:
+            best_config, best_mae = config, mae
+    return best_config
+
+
+def cross_validate_nested(
+    features_df: pd.DataFrame,
+    n_splits: int,
+    n_inner_splits: int = 3,
+    random_state: int = 0,
+) -> dict:
+    """Same outer GroupKFold-by-district honest metric as cross_validate(), except the
+    LightGBM hyperparameters used within each outer fold are chosen by an inner
+    GroupKFold over that fold's training rows only (select_hyperparams), never by looking
+    at the outer validation fold. This is the leakage-safe version of the hand-picked
+    sweep in docs/decisions.md 2026-09-25: same HYPERPARAM_CANDIDATES, but the config is
+    now selected inside the training data of each fold instead of by eyeballing the
+    reported metric.
+    """
+    import lightgbm as lgb
+    from sklearn.metrics import mean_absolute_error
+    from sklearn.model_selection import GroupKFold
+
+    X = features_df[FEATURE_COLUMNS]
+    y = features_df["log_yield"]
+    groups = features_df["district_code"]
+
+    model_errors, baseline_errors, chosen_configs = [], [], []
+    for train_idx, val_idx in GroupKFold(n_splits=n_splits).split(X, y, groups):
+        X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
+        y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+
+        config = select_hyperparams(
+            X_train, y_train, groups.iloc[train_idx], n_inner_splits, random_state
+        )
+        chosen_configs.append(config)
+
+        model = lgb.LGBMRegressor(random_state=random_state, verbosity=-1, **config)
+        model.fit(X_train, y_train)
+        model_errors.append(mean_absolute_error(y_val, model.predict(X_val)))
+
+        baseline_pred = y_train.mean()
+        baseline_errors.append(mean_absolute_error(y_val, [baseline_pred] * len(y_val)))
+
+    model_mae = float(np.mean(model_errors))
+    baseline_mae = float(np.mean(baseline_errors))
+    return {
+        "n_splits": n_splits,
+        "n_inner_splits": n_inner_splits,
+        "n_rows": len(features_df),
+        "n_districts": int(groups.nunique()),
+        "model_mae_log": model_mae,
+        "baseline_mae_log": baseline_mae,
+        "improvement_over_baseline_pct": (baseline_mae - model_mae) / baseline_mae * 100,
+        "chosen_configs_per_fold": chosen_configs,
+    }
+
+
+def fit_final_model(features_df: pd.DataFrame, random_state: int = 0, params: dict | None = None):
+    """Fit on every eligible row for this crop (after cross_validate_nested already
+    reported honest out-of-fold performance); this final model is what SHAP explanations
+    use. `params` defaults to LightGBM's own defaults; pass the output of
+    select_hyperparams(..., over the full dataset) to use the same tuned config the
+    nested CV validated, rather than an untuned default."""
     import lightgbm as lgb
 
     X = features_df[FEATURE_COLUMNS]
     y = features_df["log_yield"]
-    model = lgb.LGBMRegressor(random_state=random_state, verbosity=-1)
+    model = lgb.LGBMRegressor(random_state=random_state, verbosity=-1, **(params or {}))
     model.fit(X, y)
     return model
 

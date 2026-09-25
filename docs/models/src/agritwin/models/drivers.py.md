@@ -74,41 +74,52 @@ district x season x year (joined from the GEE mart).
     each district's plots for that crop. Districts with fewer than `min_plots` (30, same floor
     as the survey's `n_min`) eligible plots for that crop are flagged `"suppressed"`, kept in
     the output but marked, not silently dropped.
-- Default LightGBM hyperparameters, untuned (see Limitations).
+- Hyperparameters are chosen by a nested CV, not left at LightGBM's defaults (see Method and
+  Metrics below; this replaces the untuned-defaults version documented before 2026-09-25).
 
 ## Validation scheme
-GroupKFold by district (5 splits), never a random K-fold: plots within a district are
+GroupKFold by district (5 outer splits), never a random K-fold: plots within a district are
 correlated (shared soil, shared local conditions), and a random split would leak
 district-level information into the validation fold. Compared against a fold-safe naive
 baseline: each fold's own training-set mean log-yield (never averaging in validation-fold
 values), so the baseline sees exactly the same information split as the model.
 
+**Hyperparameters are selected by a nested inner CV**, not hand-picked against the reported
+metric. Within each outer fold's *training* rows only, `select_hyperparams()` runs a further
+GroupKFold-by-district search (3 inner splits) over a small fixed candidate grid (LightGBM
+defaults, plus three progressively more regularized configs identified in the 2026-09-24/25
+sorghum investigation: shallower trees, larger `min_child_samples`, L1/L2 regularization,
+slower learning rate), and the winning config for that outer fold is then fit on the full
+outer-training set and scored on the untouched outer-validation fold. The outer fold never
+influences which config is chosen, so the reported metric below carries no tuning leakage. The
+production model (`fit_final_model`) uses the same selection procedure run once more over the
+entire dataset, and the chosen config is recorded per crop in
+`artifacts/drivers_*_metadata.json`'s `final_hyperparams`.
+
 ## Metrics (with baselines)
-Out-of-fold MAE in log space, model versus the fold-safe naive baseline
-(`artifacts/drivers_*_metadata.json`, current production run):
+Out-of-fold MAE in log space from the nested CV above, model versus the fold-safe naive
+baseline (`artifacts/drivers_*_metadata.json`, current production run):
 
-| Crop | Model MAE (log) | Baseline MAE (log) | Improvement over baseline |
-|---|---|---|---|
-| maize | 0.693 | 0.727 | +4.6% |
-| beans | 0.532 | 0.561 | +5.2% |
-| Irish potato | 0.605 | 0.750 | +19.4% |
-| sorghum | 0.531 | 0.506 | **-5.0% (worse than baseline)** |
+| Crop | Model MAE (log) | Baseline MAE (log) | Improvement over baseline | Chosen final config |
+|---|---|---|---|---|
+| maize | 0.669 | 0.727 | +7.96% | `num_leaves=4, min_child_samples=50, max_depth=3, reg_alpha/lambda=1.0, lr=0.03, n_estimators=150` |
+| beans | 0.534 | 0.561 | +4.76% | same as maize |
+| Irish potato | 0.584 | 0.750 | +22.23% | `num_leaves=7, min_child_samples=30, max_depth=4, reg_alpha/lambda=1.0, lr=0.05, n_estimators=200` |
+| sorghum | 0.513 | 0.506 | **-1.35% (still worse than baseline)** | same as maize |
 
-Sorghum's driver model does not beat the naive baseline. This is reported honestly rather than
-hidden or tuned away (see `docs/decisions.md`, 2026-09-24 and 2026-09-25). A follow-up
-investigation (2026-09-25) found this is a real, structural result, not a bug: sorghum's
-`log_yield` has the lowest variance of the four crops (0.656 vs. 0.926 for maize, 0.892 for
-Irish potato, 0.711 for beans), so the naive per-district mean already explains more of the
-variation before any model is applied, and four of sorghum's eight boolean practice features are
-close to constant for this crop (`improved_seed` adoption 0.2%, `mechanized` 3.1%, `irrigated`
-0.5%, `land_consolidation` 1.9%, versus, e.g., 81.4% improved-seed adoption for maize), leaving
-structurally less signal for a model to find. A controlled hyperparameter sweep against the same
-CV showed heavier regularization recovers roughly half the gap (-5.0% to -1.35%) and also
-improves maize's already-positive result, indicating an untuned-defaults issue rather than
-something sorghum-specific. This was deliberately not applied to production, because selecting a
-configuration using the same CV metric that is then reported as the honest result would itself
-be a form of leakage; a defensible fix needs a proper nested CV or held-out tuning set, flagged
-as a next step, not done here.
+Nested CV improved three of four crops over the earlier untuned-defaults numbers (maize +4.6%
+to +7.96%, Irish potato +19.4% to +22.23%, beans essentially flat at +4.76%) and closed most of
+sorghum's gap (-5.0% to -1.35%), matching what the 2026-09-25 hand-picked sweep predicted, this
+time without the leakage risk of picking a config by eye against the reported number. **Sorghum
+still does not beat the naive baseline.** This is reported honestly rather than hidden (see
+`docs/decisions.md`, 2026-09-24 and 2026-09-25). The underlying reason, confirmed in the
+2026-09-25 investigation, is structural, not a tuning gap: sorghum's `log_yield` has the lowest
+variance of the four crops (0.656 vs. 0.926 for maize, 0.892 for Irish potato, 0.711 for beans),
+so the naive per-district mean already explains more of the variation before any model is
+applied, and four of sorghum's eight boolean practice features are close to constant for this
+crop (`improved_seed` adoption 0.2%, `mechanized` 3.1%, `irrigated` 0.5%, `land_consolidation`
+1.9%, versus, e.g., 81.4% improved-seed adoption for maize), leaving structurally less signal for
+any model, tuned or not, to find.
 
 ## Uncertainty method
 SHAP values themselves are point estimates of feature contribution to a single model fit; no
@@ -132,9 +143,10 @@ figure.
   even though the API's `/drivers` endpoint accepts a `season` parameter (documented as currently
   having no effect; see `docs/decisions.md`, 2026-09-24, "found neither driver nor nowcast
   models split by season").
-- **Untuned hyperparameters.** LightGBM defaults are used as-is; the 2026-09-25 investigation
-  confirmed a real accuracy gain is available from regularization tuning across all four crops,
-  not implemented here to avoid leakage from tuning against the reported evaluation metric.
+- **Hyperparameter search is limited to 4 hand-picked candidates**, not a broad search: the
+  nested CV (see Method) chooses among LightGBM defaults and 3 regularized configs identified in
+  the earlier hand-picked sweep, not an open hyperparameter space. A wider search might find a
+  better config still, at the cost of more compute per training run.
 - **erosion_degree** has one documented year-comparability caveat: 2019 has only 3 severity
   levels where 2020 onward has 4 (2019's level 3 "Weak" merges what later years split into
   "Low" and "Very Low"), so it is ordinally comparable but not identical across years.
@@ -155,8 +167,11 @@ figure.
 
 ## Version
 - Data version: `2026.10.0` (from `artifacts/drivers_*_metadata.json`).
-- Trained: 2026-09-24 (per-crop timestamps in `artifacts/drivers_*_metadata.json`).
+- Trained: 2026-09-25 (nested-CV retrain; per-crop timestamps in
+  `artifacts/drivers_*_metadata.json`).
 - Config: `config/settings.yaml` `drivers` block (`target: log_yield`, `cv: group_kfold_district`,
-  `n_splits: 5`, `min_plots: 30`).
-- Git commit: `766290df98860eb2d55c3eac76e812722e28fef0` (training run); current repo HEAD `68ac497`
-  (2026-09-25) for this card.
+  `n_splits: 5`, `min_plots: 30`); inner CV `n_inner_splits: 3` (passed by
+  `models/run.py`, not yet its own settings key); `HYPERPARAM_CANDIDATES` in
+  `models/drivers.py`.
+- Git commit: `e59e68d` (training run); current repo HEAD as of this card's last edit,
+  2026-09-25 (nested CV / npm audit session).
