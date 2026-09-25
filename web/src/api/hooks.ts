@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from './client'
 import type {
+  BacktestRow,
   Crop,
   DistrictProfile,
   DistrictProperties,
+  MetaResponse,
   NowcastRow,
   ScenarioRow,
   Season,
@@ -48,5 +50,20 @@ export function useNowcast(crop: Crop, season: Season, year: number, lead: numbe
   return useQuery({
     queryKey: ['nowcast', crop, season, year, lead],
     queryFn: () => apiGet<NowcastRow[]>('/nowcast', { crop, season, year, lead }),
+  })
+}
+
+export function useBacktest(crop: Crop, season: Season) {
+  return useQuery({
+    queryKey: ['backtest', crop, season],
+    queryFn: () => apiGet<BacktestRow[]>('/backtest', { crop, season }),
+  })
+}
+
+export function useMeta() {
+  return useQuery({
+    queryKey: ['meta'],
+    queryFn: () => apiGet<MetaResponse>('/meta'),
+    staleTime: Infinity,
   })
 }

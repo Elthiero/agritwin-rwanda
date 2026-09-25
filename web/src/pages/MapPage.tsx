@@ -10,6 +10,8 @@ import { formatKgHa, formatPercent } from '../lib/format'
 import { CROPS, MAX_YEAR, MIN_YEAR, SEASONS } from '../lib/constants'
 import Legend from '../components/Legend'
 import LanguageSwitcher from '../components/LanguageSwitcher'
+import SiteNav from '../components/SiteNav'
+import '../styles/shared.css'
 
 interface SelectedDistrict {
   code: number
@@ -125,6 +127,7 @@ export default function MapPage() {
         </div>
         <LanguageSwitcher />
       </header>
+      <SiteNav />
 
       <div className="controls" role="toolbar" aria-label="Filters">
         <div className="control-group">

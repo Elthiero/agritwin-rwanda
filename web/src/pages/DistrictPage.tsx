@@ -8,6 +8,8 @@ import { CROPS, LEAD_MONTHS, MAX_YEAR, MIN_YEAR, SEASONS } from '../lib/constant
 import { formatKgHa, formatPercent } from '../lib/format'
 import { DEFAULT_LEVERS, findScenarioRow, type LeverState } from '../lib/scenario'
 import LanguageSwitcher from '../components/LanguageSwitcher'
+import SiteNav from '../components/SiteNav'
+import '../styles/shared.css'
 import './DistrictPage.css'
 
 const LEVER_KEYS = Object.keys(DEFAULT_LEVERS) as (keyof LeverState)[]
@@ -73,6 +75,7 @@ export default function DistrictPage() {
         </div>
         <LanguageSwitcher />
       </header>
+      <SiteNav />
 
       <div className="controls" role="toolbar" aria-label="Filters">
         <div className="control-group">

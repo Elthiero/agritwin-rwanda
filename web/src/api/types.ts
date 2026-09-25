@@ -83,6 +83,25 @@ export interface ScenarioRow {
   reliability: Reliability
 }
 
+export interface BacktestRow {
+  crop: Crop
+  lead_months: number
+  model: string
+  mape_pct: number
+  mape_std_across_years: number
+  mae_kg_ha: number
+  n_years_tested: number
+}
+
+export interface MetaResponse {
+  crops: Crop[]
+  seasons: Season[]
+  years: number[]
+  districts: DistrictInfo[]
+  data_version: string
+  last_updated: string | null
+}
+
 export interface NowcastRow {
   district_code: number
   crop: Crop
