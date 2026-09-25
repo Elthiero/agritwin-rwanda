@@ -55,10 +55,10 @@ Nothing left in this table: every module and endpoint the build guide's API surf
 ## Technical debt and quick wins
 
 - ~~`web/tsconfig.json`, Vite client types, ESLint config, and test files~~ — fixed this session.
-- `stg_sas_plot_crop.district_name` should be wired from the crosswalk now that it exists, rather than left null. (S)
+- ~~`stg_sas_plot_crop.district_name` should be wired from the crosswalk~~ — already fixed in an earlier session (`harmonize/run.py` joins `district_crosswalk.csv`); this bullet was stale, not an open item. Corrected 2026-09-25.
 - `features/gee_mart.py` should join the SAS-side district estimates now that the crosswalk exists. (M)
 - `docs/data/questionnaires/` is still empty; depends on NISR providing the questionnaire PDF. (M, external dependency)
-- `api/app/data_store.py` still loads district boundaries from `data/external/` directly rather than `data/public/`, an inconsistency flagged in the previous audit and still unresolved (harmless, since boundaries aren't sensitive, but worth a deliberate decision).
+- ~~`api/app/data_store.py` loaded district boundaries from `data/external/` directly rather than `data/public/`~~ — fixed 2026-09-25 (`docs/decisions.md`): now serves `data/public/geo/rwanda_districts_simplified.geojson` (already `district_code`-joined at export time), removing a runtime crosswalk join and cutting the `/districts` response from ~5.6MB to ~190KB.
 - The driver model's `sorghum` underperformance and the nowcast's largely-null-result verdict are not technical debt to "fix" by tuning; they are honest findings that should be carried into any model card or UI copy rather than glossed over.
 
 ## Recommended next tasks, ordered by judging-impact
@@ -70,4 +70,4 @@ Judging: Problem relevance, Data and methodology, Tech innovation, Usability, Ta
 3. **Deploy and smoke-test** the API and web app somewhere real, per the project's own "deploy by hand, early and often" development method, not yet done at all — needs the user's own platform choice (Render/Railway/Fly.io). *Tangible impact.* — **M**
 4. **Investigate why sorghum's driver model and the nowcast overall don't beat baseline** for maize/irish_potato, rather than treating the current honest-but-null result as final. Candidates already logged in `docs/decisions.md`: sample size, spatial aggregation smoothing, insufficient hyperparameter tuning. *Data and methodology.* — **L**
 5. **`docs/data/questionnaires/`**: request the SAS questionnaire PDFs from NISR to independently confirm the 2025 low-confidence column matches and the 2021 stratum-code resolution. *Data and methodology.* — **M**, external dependency
-6. ~~Wire i18n~~ — done this session (en/fr/rw on both pages); Kinyarwanda strings need native-speaker review before final. ~~`web/` npm audit~~ — triaged this session, 8/14 fixed, 6 deliberately deferred with documented reasons. `features/gee_mart.py`'s orphaned output; `survey/`'s raw numeric `geo_code`; `api/app/data_store.py` loading boundaries from `data/external/` instead of `data/public/`. All small, all flagged, none urgent.
+6. ~~Wire i18n~~ — done this session (en/fr/rw on both pages); Kinyarwanda strings need native-speaker review before final. ~~`web/` npm audit~~ — triaged this session, 8/14 fixed, 6 deliberately deferred with documented reasons. ~~`api/app/data_store.py` boundary source~~ — fixed this session, now serves `data/public/` and is ~30x smaller. `features/gee_mart.py`'s orphaned output; `survey/`'s raw numeric `geo_code`. Both small, both flagged, neither urgent.
