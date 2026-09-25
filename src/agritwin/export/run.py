@@ -18,6 +18,7 @@ import pandas as pd
 from agritwin.config import load_settings
 from agritwin.export.briefs import build_brief_context, render_brief_html, write_brief_pdf
 from agritwin.export.geo import attach_district_codes, simplify_boundaries
+from agritwin.export.static_data import run as run_static_data
 from agritwin.gee.boundaries import load_district_crosswalk
 
 DATA_EXTERNAL = Path(__file__).resolve().parents[3] / "data" / "external"
@@ -81,6 +82,7 @@ def run_briefs() -> None:
 def main() -> None:
     run_geo()
     run_briefs()
+    run_static_data()  # after run_geo: reads its simplified districts geojson output
 
 
 if __name__ == "__main__":

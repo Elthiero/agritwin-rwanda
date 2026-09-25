@@ -4,12 +4,16 @@ surface at real pipeline-run time."""
 
 from __future__ import annotations
 
+import json
+
 import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Polygon
 
 from agritwin.export.briefs import build_brief_context, render_brief_html, write_brief_pdf
 from agritwin.export.geo import attach_district_codes, simplify_boundaries
+from agritwin.export.static_data import CSV_MIRRORS, build_meta
+from agritwin.export.static_data import run as run_static_data
 
 
 def _yield_gap_df() -> pd.DataFrame:
@@ -117,3 +121,53 @@ def test_attach_district_codes_joins_on_gaul_code():
     )
     result = attach_district_codes(gdf, crosswalk)
     assert result.loc[0, "district_code"] == 11
+
+
+def test_build_meta_matches_years_and_sorts_districts():
+    district_yield = pd.DataFrame({"year": [2024, 2019, 2024]})
+    districts_geojson = {
+        "features": [
+            {"properties": {"district_code": 21, "district_name": "Nyanza"}},
+            {"properties": {"district_code": 11, "district_name": "Nyarugenge"}},
+        ]
+    }
+    meta = build_meta(district_yield, districts_geojson)
+    assert meta["years"] == [2019, 2024]
+    assert [d["district_code"] for d in meta["districts"]] == [11, 21]
+    assert meta["crops"] == ["maize", "beans", "irish_potato", "sorghum"]
+
+
+def test_build_meta_handles_missing_sources():
+    meta = build_meta(None, None)
+    assert meta["years"] == []
+    assert meta["districts"] == []
+
+
+def test_run_static_data_mirrors_every_public_csv_and_writes_meta(tmp_path):
+    public_dir = tmp_path / "public"
+    (public_dir / "geo").mkdir(parents=True)
+    for csv_name in CSV_MIRRORS:
+        pd.DataFrame([{"crop": "maize", "year": 2024}]).to_csv(public_dir / csv_name, index=False)
+    (public_dir / "geo" / "rwanda_districts_simplified.geojson").write_text(
+        json.dumps({"type": "FeatureCollection", "features": []})
+    )
+
+    out_dir = tmp_path / "static-data"
+    run_static_data(public_dir=public_dir, out_dir=out_dir)
+
+    for json_name in CSV_MIRRORS.values():
+        assert (out_dir / json_name).exists()
+    assert (out_dir / "districts.geojson").exists()
+    assert (out_dir / "meta.json").exists()
+    meta = json.loads((out_dir / "meta.json").read_text())
+    assert meta["years"] == [2024]
+
+
+def test_run_static_data_skips_missing_files_without_raising(tmp_path):
+    public_dir = tmp_path / "public"
+    public_dir.mkdir()
+    out_dir = tmp_path / "static-data"
+    run_static_data(public_dir=public_dir, out_dir=out_dir)  # no CSVs, no geojson at all
+    assert (out_dir / "meta.json").exists()
+    for json_name in CSV_MIRRORS.values():
+        assert not (out_dir / json_name).exists()

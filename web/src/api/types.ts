@@ -1,118 +1,35 @@
-/** Hand-written to match api/app/schemas.py's response models. Not yet generated from
- * OpenAPI (web/CLAUDE.md's documented `npm run gen:types` script doesn't exist yet);
- * a known stopgap, not a permanent choice. */
+/** Thin aliases over the OpenAPI-generated schema (see `npm run gen:types`,
+ * src/api/schema.ts), kept under these existing flat names so the rest of the app
+ * doesn't need to know the generated schema's own nesting. Regenerate schema.ts (a
+ * real API instance must be running locally first) whenever api/app/schemas.py
+ * changes; a stale schema.ts is a tsc error at the next build, not a silent drift,
+ * since every type below is a direct alias, not a re-declaration. */
 
-export type Crop = 'maize' | 'beans' | 'irish_potato' | 'sorghum'
-export type Season = 'A' | 'B'
-export type Reliability = 'ok' | 'use_with_caution' | 'suppressed'
+import type { components } from './schema'
 
-export interface YieldGapRow {
-  district_code: number
-  crop: Crop
-  season: Season
-  year: number
-  actual_yield_kg_ha: number
-  actual_yield_kg_ha_ci_low: number | null
-  actual_yield_kg_ha_ci_high: number | null
-  attainable_yield_kg_ha: number | null
-  yield_gap_kg_ha: number | null
-  yield_gap_pct: number | null
-  n_plots: number
-  reliability: Reliability
-}
+export type Crop = components['schemas']['Crop']
+export type Season = components['schemas']['Season']
+export type Reliability = components['schemas']['Reliability']
 
+export type YieldGapRow = components['schemas']['YieldGapRow']
+export type DriverRow = components['schemas']['DriverRow']
+export type DistrictInfo = components['schemas']['DistrictInfo']
+export type YearlyYield = components['schemas']['YearlyYield']
+export type YearlyGap = components['schemas']['YearlyGap']
+export type DistrictProfile = components['schemas']['DistrictProfile']
+export type ScenarioRow = components['schemas']['ScenarioRow']
+export type NowcastRow = components['schemas']['NowcastRow']
+export type NowcastCurveRow = components['schemas']['NowcastCurveRow']
+export type BacktestRow = components['schemas']['BacktestRow']
+export type KpiRow = components['schemas']['KpiRow']
+export type MetaResponse = components['schemas']['MetaResponse']
+
+/** Not part of api/app/schemas.py: these are GeoJSON Feature `properties`, from
+ * /districts' GeoJSONResponse (a generic FeatureCollection in the OpenAPI schema,
+ * so openapi-typescript can't derive this specific shape). Sourced from
+ * src/agritwin/export/geo.py's actual output columns. */
 export interface DistrictProperties {
   district_name: string
   gaul_district_code: number
   district_code: number
-}
-
-export interface DriverRow {
-  crop: Crop
-  district_code: number | null
-  feature: string
-  mean_abs_shap: number
-  direction: string
-  n_plots: number | null
-  reliability: Reliability | null
-}
-
-export interface DistrictInfo {
-  district_code: number
-  district_name: string
-}
-
-export interface YearlyYield {
-  year: number
-  yield_kg_ha: number
-  yield_kg_ha_ci_low: number | null
-  yield_kg_ha_ci_high: number | null
-  reliability: Reliability
-}
-
-export interface YearlyGap {
-  year: number
-  actual_yield_kg_ha: number
-  attainable_yield_kg_ha: number | null
-  yield_gap_kg_ha: number | null
-  yield_gap_pct: number | null
-  reliability: Reliability
-}
-
-export interface DistrictProfile {
-  district_code: number
-  district_name: string
-  crop: Crop
-  yield_trend: YearlyYield[]
-  gap_trend: YearlyGap[]
-  top_drivers: DriverRow[]
-  peer_districts: DistrictInfo[]
-}
-
-export interface ScenarioRow {
-  crop: Crop
-  district_code: number
-  improved_seed: boolean
-  inorganic_fert: boolean
-  organic_fert: boolean
-  irrigated: boolean
-  mean_yield_kg_ha: number
-  ci_low: number
-  ci_high: number
-  n_plots: number
-  reliability: Reliability
-}
-
-export interface BacktestRow {
-  crop: Crop
-  lead_months: number
-  model: string
-  mape_pct: number
-  mape_std_across_years: number
-  mae_kg_ha: number
-  n_years_tested: number
-}
-
-export interface MetaResponse {
-  crops: Crop[]
-  seasons: Season[]
-  years: number[]
-  districts: DistrictInfo[]
-  data_version: string
-  last_updated: string | null
-}
-
-export interface NowcastRow {
-  district_code: number
-  crop: Crop
-  season: Season
-  year: number
-  lead_months: number
-  model: string
-  predicted_yield_kg_ha: number
-  ci_low: number
-  ci_high: number
-  actual_yield_kg_ha: number | null
-  is_backtest: boolean
-  reliability: Reliability
 }
