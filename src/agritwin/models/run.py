@@ -95,9 +95,13 @@ def run() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     zones.to_csv(DATA_PUBLIC / "district_zones.csv", index=False)
 
     # Every row kept, including "suppressed" ones: CLAUDE.md golden rule 6 flags and
-    # greys out low-reliability cells in the UI, it does not hide them.
-    yield_gap.to_csv(DATA_PUBLIC / "yield_gap.csv", index=False)
-    logger.info(f"wrote district_zones.csv and yield_gap.csv ({len(yield_gap)} rows)")
+    # greys out low-reliability cells in the UI, it does not hide them. Restricted to MVP
+    # crops for the same reason as survey/run.py's to_public(): compute_yield_gap runs
+    # over every crop present in the marts (including out-of-scope ones like rice), which
+    # no downstream consumer reads.
+    yield_gap_public = yield_gap[yield_gap["crop"].isin(settings["scope"]["crops"])]
+    yield_gap_public.to_csv(DATA_PUBLIC / "yield_gap.csv", index=False)
+    logger.info(f"wrote district_zones.csv and yield_gap.csv ({len(yield_gap_public)} rows)")
 
     return zones, attainable_yield, yield_gap
 

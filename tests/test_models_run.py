@@ -8,7 +8,10 @@ import pandas as pd
 def test_run_wires_settings_and_writes_expected_outputs(monkeypatch, tmp_path):
     import agritwin.models.run as run_module
 
-    fake_settings = {"attainable": {"percentile": 90, "kmeans_k": 2, "min_segments": 1}}
+    fake_settings = {
+        "scope": {"crops": ["maize"]},
+        "attainable": {"percentile": 90, "kmeans_k": 2, "min_segments": 1},
+    }
 
     soil = pd.DataFrame(
         {

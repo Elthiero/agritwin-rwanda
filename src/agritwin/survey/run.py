@@ -72,13 +72,21 @@ def build_district_yield(plot_crop: pd.DataFrame, settings: dict) -> pd.DataFram
     return combined[ordered]
 
 
-def to_public(district_yield: pd.DataFrame) -> pd.DataFrame:
+def to_public(district_yield: pd.DataFrame, mvp_crops: list[str]) -> pd.DataFrame:
     """Aggregated-only view: keeps every row, including "suppressed" ones, since
     CLAUDE.md golden rule 6 requires low-reliability cells to be "flagged... and greyed
     out in the UI", not removed (the API and frontend decide how to render the flag; this
     export just carries it through). Drops the standard-error and CV columns, which are
     safe for internal QC but redundant with the CI already shown, and are never plot- or
-    farmer-level so there is nothing privacy-sensitive being kept either way."""
+    farmer-level so there is nothing privacy-sensitive being kept either way.
+
+    Restricted to `mvp_crops` (settings.scope.crops): `estimate_ratio` runs over every
+    crop present in the eligible plots, including ones out of MVP scope (e.g. rice, not
+    chosen over sorghum, see docs/decisions.md 2026-09-23), which have no consumer
+    anywhere downstream (API's Crop enum, drivers, nowcast, scenario all only know the 4
+    MVP crops). Kept in the mart (full detail, gitignored) but dropped here so the public
+    export doesn't carry rows nothing ever reads."""
+    district_yield = district_yield[district_yield["crop"].isin(mvp_crops)]
     return district_yield[
         [
             "geo_level",
@@ -112,7 +120,7 @@ def run() -> pd.DataFrame:
     district_yield.to_parquet(DATA_MARTS / "district_yield.parquet", index=False)
     logger.info(f"wrote {DATA_MARTS / 'district_yield.parquet'}")
 
-    public = to_public(district_yield)
+    public = to_public(district_yield, settings["scope"]["crops"])
     DATA_PUBLIC.mkdir(parents=True, exist_ok=True)
     public.to_csv(DATA_PUBLIC / "district_yield.csv", index=False)
     logger.info(f"wrote {DATA_PUBLIC / 'district_yield.csv'} ({len(public)} rows)")

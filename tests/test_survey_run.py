@@ -53,7 +53,7 @@ def test_to_public_keeps_suppressed_rows_with_the_reliability_flag():
             },
         ]
     )
-    public = to_public(district_yield)
+    public = to_public(district_yield, mvp_crops=["maize", "beans", "irish_potato", "sorghum"])
     assert len(public) == 2
     assert set(public["reliability"]) == {"suppressed", "ok"}
     suppressed_row = public[public["geo_code"] == "11"].iloc[0]
@@ -84,8 +84,58 @@ def test_to_public_drops_internal_standard_error_columns():
             }
         ]
     )
-    public = to_public(district_yield)
+    public = to_public(district_yield, mvp_crops=["maize", "beans", "irish_potato", "sorghum"])
     assert "total_production_kg_se" not in public.columns
     assert "total_area_ha_se" not in public.columns
     assert "yield_kg_ha_se" not in public.columns
     assert "yield_kg_ha_cv" not in public.columns
+
+
+def test_to_public_drops_crops_outside_mvp_scope():
+    # settings.scope.crops (config/settings.yaml) is the MVP crop list; estimate_ratio
+    # runs over every crop present in the eligible plots, including rice (not chosen over
+    # sorghum, see docs/decisions.md 2026-09-23), which no downstream consumer reads.
+    district_yield = pd.DataFrame(
+        [
+            {
+                "geo_level": "district",
+                "geo_code": "11",
+                "crop": "maize",
+                "season": "A",
+                "year": "2024",
+                "total_production_kg": 1000.0,
+                "total_production_kg_se": 100.0,
+                "total_area_ha": 10.0,
+                "total_area_ha_se": 1.0,
+                "yield_kg_ha": 100.0,
+                "yield_kg_ha_se": 10.0,
+                "yield_kg_ha_ci_low": 80.0,
+                "yield_kg_ha_ci_high": 120.0,
+                "yield_kg_ha_cv": 0.10,
+                "n_plots": 40,
+                "n_segments": 25,
+                "reliability": "ok",
+            },
+            {
+                "geo_level": "district",
+                "geo_code": "11",
+                "crop": "rice",
+                "season": "A",
+                "year": "2024",
+                "total_production_kg": 500.0,
+                "total_production_kg_se": 50.0,
+                "total_area_ha": 5.0,
+                "total_area_ha_se": 0.5,
+                "yield_kg_ha": 100.0,
+                "yield_kg_ha_se": 10.0,
+                "yield_kg_ha_ci_low": 80.0,
+                "yield_kg_ha_ci_high": 120.0,
+                "yield_kg_ha_cv": 0.10,
+                "n_plots": 40,
+                "n_segments": 25,
+                "reliability": "ok",
+            },
+        ]
+    )
+    public = to_public(district_yield, mvp_crops=["maize", "beans", "irish_potato", "sorghum"])
+    assert set(public["crop"]) == {"maize"}
