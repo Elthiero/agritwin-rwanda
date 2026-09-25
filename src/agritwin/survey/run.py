@@ -20,6 +20,7 @@ from agritwin.survey.core import add_reliability_flag, estimate_ratio, prepare_f
 DATA_STAGING = Path(__file__).resolve().parents[3] / "data" / "staging"
 DATA_MARTS = Path(__file__).resolve().parents[3] / "data" / "marts"
 DATA_PUBLIC = Path(__file__).resolve().parents[3] / "data" / "public"
+DATA_REFERENCE = Path(__file__).resolve().parents[3] / "data" / "reference"
 
 logger = loguru.logger
 
@@ -72,7 +73,39 @@ def build_district_yield(plot_crop: pd.DataFrame, settings: dict) -> pd.DataFram
     return combined[ordered]
 
 
-def to_public(district_yield: pd.DataFrame, mvp_crops: list[str]) -> pd.DataFrame:
+def build_geo_name_lookup(crosswalk: pd.DataFrame) -> dict[str, str]:
+    """geo_code (as `to_public`'s string, e.g. "11.0") -> human-readable name, for
+    district and province rows; national's "RWA" is handled separately in `to_public`.
+
+    `data/reference/district_crosswalk.csv` (the same crosswalk `harmonize/run.py` uses
+    to label `stg_sas_plot_crop.district_name`, and the API's `/districts` response)
+    gives district names directly. It has no `province_code` column, but
+    `stg_sas_plot_crop.province_code` (the real SAS-sourced column `estimate_ratio`
+    groups province rows by) equals `district_code // 10` for every one of the 30
+    districts, confirmed against the real harmonized data, not assumed: this is the
+    survey's own province numbering, not an invented mapping.
+    """
+    lookup = {
+        str(float(code)): name
+        for code, name in zip(
+            crosswalk["nisr_district_code"], crosswalk["district_name"], strict=True
+        )
+    }
+    province_names = (
+        crosswalk.assign(province_code=(crosswalk["nisr_district_code"] // 10).astype(int))
+        .groupby("province_code")["province"]
+        .first()
+        .to_dict()
+    )
+    lookup.update(
+        {str(float(int(code))): str(name) for code, name in province_names.items()}  # type: ignore[call-overload]
+    )
+    return lookup
+
+
+def to_public(
+    district_yield: pd.DataFrame, mvp_crops: list[str], geo_names: dict[str, str]
+) -> pd.DataFrame:
     """Aggregated-only view: keeps every row, including "suppressed" ones, since
     CLAUDE.md golden rule 6 requires low-reliability cells to be "flagged... and greyed
     out in the UI", not removed (the API and frontend decide how to render the flag; this
@@ -85,12 +118,21 @@ def to_public(district_yield: pd.DataFrame, mvp_crops: list[str]) -> pd.DataFram
     chosen over sorghum, see docs/decisions.md 2026-09-23), which have no consumer
     anywhere downstream (API's Crop enum, drivers, nowcast, scenario all only know the 4
     MVP crops). Kept in the mart (full detail, gitignored) but dropped here so the public
-    export doesn't carry rows nothing ever reads."""
-    district_yield = district_yield[district_yield["crop"].isin(mvp_crops)]
+    export doesn't carry rows nothing ever reads.
+
+    `geo_name` (from `geo_names`, see `build_geo_name_lookup`) gives district and
+    province rows a human-readable label alongside the numeric `geo_code`, e.g. for
+    someone opening this CSV directly rather than through the API (which already
+    resolves names itself, from the boundaries file, not from this column)."""
+    district_yield = district_yield[district_yield["crop"].isin(mvp_crops)].copy()
+    district_yield["geo_name"] = district_yield["geo_code"].map(geo_names).fillna(
+        "Rwanda"
+    )
     return district_yield[
         [
             "geo_level",
             "geo_code",
+            "geo_name",
             "crop",
             "season",
             "year",
@@ -120,7 +162,9 @@ def run() -> pd.DataFrame:
     district_yield.to_parquet(DATA_MARTS / "district_yield.parquet", index=False)
     logger.info(f"wrote {DATA_MARTS / 'district_yield.parquet'}")
 
-    public = to_public(district_yield, settings["scope"]["crops"])
+    crosswalk = pd.read_csv(DATA_REFERENCE / "district_crosswalk.csv")
+    geo_names = build_geo_name_lookup(crosswalk)
+    public = to_public(district_yield, settings["scope"]["crops"], geo_names)
     DATA_PUBLIC.mkdir(parents=True, exist_ok=True)
     public.to_csv(DATA_PUBLIC / "district_yield.csv", index=False)
     logger.info(f"wrote {DATA_PUBLIC / 'district_yield.csv'} ({len(public)} rows)")

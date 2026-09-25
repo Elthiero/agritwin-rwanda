@@ -1,4 +1,4 @@
-.PHONY: setup stage clean marts gee features train export check-public all api web test lint docs
+.PHONY: setup stage clean marts gee train export check-public all api web test lint docs
 
 # Assumes an activated venv (python3 -m venv venv && source venv/bin/activate).
 PY = python -m
@@ -23,9 +23,6 @@ marts:
 gee:
 	$(PY) agritwin.gee.run
 
-features:
-	$(PY) agritwin.features.run
-
 train:
 	$(PY) agritwin.models.run
 
@@ -35,7 +32,7 @@ export:
 check-public:
 	python scripts/check_public.py
 
-all: stage clean marts gee features train export check-public
+all: stage clean marts gee train export check-public
 
 api:
 	uvicorn api.app.main:app --reload --port 8000

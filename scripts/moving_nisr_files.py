@@ -37,7 +37,7 @@ for year_folder_name in SAS_YEARS:
         candidates.setdefault(base, {})[f.suffix.lower()] = f
 
     copied = 0
-    for base, by_ext in candidates.items():
+    for by_ext in candidates.values():
         chosen = by_ext.get(".dta") or by_ext.get(".sav")
         dest_path = dest_dir / chosen.name
         shutil.copy2(chosen, dest_path)

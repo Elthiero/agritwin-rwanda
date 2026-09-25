@@ -116,8 +116,8 @@ data/raw/ahs/2024/
 ```bash
 make stage clean marts     # harmonize, clean, and survey-weight NISR microdata
 make gee                   # pull satellite and climate features
-make features train        # build model features and train models
-make export                # produce the aggregated, public-safe outputs (not yet built)
+make train                 # train the yield gap, driver, nowcast, and scenario models
+make export                 # produce the aggregated, public-safe outputs
 ```
 
 ### Run the app locally
