@@ -1,0 +1,32 @@
+# Render Blueprint: deploys the API and the web app as two Docker web services.
+# Service names are part of the URL (https://<name>.onrender.com) and must be globally
+# unique across all of Render, so this file cross-references them by name. If Render
+# reports a name is taken when you apply this blueprint, pick a different suffix for
+# BOTH names below and keep them consistent with the VITE_API_BASE / ALLOWED_ORIGINS
+# values, or just fix them up as env vars in the dashboard after the first deploy.
+#
+# See docs/DEPLOY.md for the full manual steps (connecting this repo to Render is an
+# account action only you can do).
+services:
+  - type: web
+    name: agritwin-rwanda-api
+    runtime: docker
+    dockerfilePath: infra/Dockerfile.api
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATA_DIR
+        value: /app/data
+      - key: ALLOWED_ORIGINS
+        value: '["https://agritwin-rwanda-web.onrender.com", "http://localhost:5173", "http://localhost:3000"]'
+
+  - type: web
+    name: agritwin-rwanda-web
+    runtime: docker
+    dockerfilePath: infra/Dockerfile.web
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: VITE_API_BASE
+        value: https://agritwin-rwanda-api.onrender.com/api/v1

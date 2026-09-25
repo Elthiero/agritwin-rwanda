@@ -8,5 +8,11 @@ COPY web .
 RUN npm run build
 
 FROM nginx:alpine
+# nginx's own docker-entrypoint runs envsubst on every file under
+# /etc/nginx/templates/*.template into /etc/nginx/conf.d/ before startup, so ${PORT}
+# below resolves to whatever the hosting platform (e.g. Render) sets at runtime. 80 is
+# the local/Docker-Compose fallback.
+ENV PORT=80
+COPY infra/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80

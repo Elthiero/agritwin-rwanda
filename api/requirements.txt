@@ -1,0 +1,12 @@
+# API runtime dependencies only. The API never imports from src/agritwin/ (verified:
+# it only reads precomputed data/public/ files), so it does not need the pipeline's
+# full requirements.txt (geopandas, lightgbm, shap, weasyprint, pyreadstat, ...), which
+# would also need system libraries (GDAL, pango/cairo) this slim image doesn't have.
+# Keeps the deployed image small and the cold start fast, per api/CLAUDE.md.
+fastapi
+uvicorn[standard]
+pydantic>=2
+pydantic-settings
+python-dotenv
+pandas
+loguru

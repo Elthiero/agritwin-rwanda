@@ -1,0 +1,21 @@
+server {
+    listen ${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # React Router client-side routing: any path that isn't a real static file
+    # (e.g. /districts/12) falls back to index.html, not nginx's default 404.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location = /index.html {
+        add_header Cache-Control "no-cache";
+    }
+
+    location ~* \.(?:css|js|svg|woff2?)$ {
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+    }
+}
