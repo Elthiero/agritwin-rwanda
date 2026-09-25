@@ -4,10 +4,11 @@
 
 Built for the [NISR 2026 Big Data Hackathon](https://statistics.gov.rw/about/hackathon/2026-hackathon-competition), Track 1 (Agricultural Productivity).
 
-- Live app: `<deployed web URL>`
-- API docs: `<deployed API URL>/docs`
+- Live app: `<deployed web URL>` (not yet deployed, see `docs/DEPLOY.md`)
+- API docs: `<deployed API URL>/docs` (not yet deployed)
 - Demo video: `<YouTube unlisted link>`
 - Documentation site: `<MkDocs GitHub Pages URL>`
+- Current build status and known gaps: [`docs/STATUS.md`](docs/STATUS.md)
 
 ---
 
@@ -34,9 +35,17 @@ AgriTwin combines NISR's Seasonal Agricultural Survey microdata with satellite a
 1. **Yield gap engine.** Estimates attainable yield (the top-performing farmers under comparable agro-ecological conditions) and shows the gap for each crop, district, and season, with a confidence interval.
 2. **Driver engine.** Uses an explainable model (LightGBM + SHAP) to show which factors, improved seed, fertilizer, irrigation, erosion control, plot size, rainfall, soil, are most associated with higher yield in each district. Presented as association, never as a causal claim.
 3. **Early estimate engine (nowcast).** Combines satellite vegetation signals (NDVI) and rainfall data during the growing season to produce a district-level yield estimate before the official SAS results are published, validated against a historical backtest.
-4. **Scenario explorer (planned, not yet built).** Will let a user ask "what would happen to the model's yield estimate if improved seed adoption in this district rose from X% to Y%", clearly labeled as a model-based estimate rather than a policy guarantee.
+4. **Scenario explorer.** Lets a user ask "what would the model's predicted yield be for this district and crop under a given combination of improved seed, fertilizer, and irrigation", precomputed over all 16 lever combinations with a bootstrap interval, always labeled as a model-based association, never a causal or policy guarantee.
 
-Every number shown in the app carries a confidence interval or an explicit reliability flag. Nothing below district level is ever shown, and no individual farmer or plot data leaves the pipeline.
+Every number shown in the app carries a confidence interval or an explicit reliability flag. Nothing below district level is ever shown, and no individual farmer or plot data leaves the pipeline. The web app has all 7 planned pages (map, district detail, early estimate, scenario explorer, methodology, data, about), works fully offline against a static JSON mirror of the API when no backend is reachable, and is available in English, French, and Kinyarwanda (Kinyarwanda is an AI-authored first draft pending native-speaker review).
+
+### What is built
+
+- **Data pipeline**: harmonize (7 SAS years) → clean → survey (design-based district estimates) → gee (satellite/climate features) → models (attainable yield, drivers, nowcast, scenario) → export (public CSVs, simplified GeoJSON, PDF district briefs). Runs end to end on real data via `make all`.
+- **API**: all 11 planned endpoints (`/meta`, `/kpis`, `/districts`, `/districts/{code}/profile`, `/yield-gap`, `/drivers`, `/backtest`, `/scenario/{code}`, `/nowcast`, `/nowcast/{code}/curve`, `/briefs/{code}.pdf`), serving precomputed data from `data/public/`.
+- **Web app**: all 7 pages (map, district detail, early estimate, scenario explorer, methodology, data, about), in English, French, and Kinyarwanda, with an offline static-data fallback when the API is unreachable.
+- **Model cards** for all 4 trained models are in `docs/models/`.
+- **Deployment**: Docker images and a Render Blueprint (`render.yaml`) are built and locally smoke-tested; the actual Render account connection is the one step left (`docs/DEPLOY.md`).
 
 ## Tech stack
 
@@ -46,7 +55,7 @@ Every number shown in the app carries a confidence interval or an explicit relia
 | Satellite and climate data | Google Earth Engine (MODIS NDVI, Sentinel-2, CHIRPS, ESA WorldCover, iSDAsoil, SRTM) |
 | Modelling | scikit-learn, LightGBM, SHAP, samplics (survey-weighted estimation) |
 | API | FastAPI, Pydantic, serving precomputed Parquet/JSON, no live database |
-| Web app | React 18, Vite, TypeScript, MapLibre GL JS, ECharts, Tailwind CSS, react-i18next (English, French, Kinyarwanda; not yet wired into any page) |
+| Web app | React 18, Vite, TypeScript, MapLibre GL JS, ECharts, Tailwind CSS, react-i18next (English, French, Kinyarwanda, wired into all 7 pages) |
 | Documentation | MkDocs Material, deployed to GitHub Pages |
 | Containerization | Docker, Docker Compose |
 
@@ -126,13 +135,15 @@ make export                 # produce the aggregated, public-safe outputs
 make api     # FastAPI on http://localhost:8000, docs at /docs
 ```
 
-For the web app, once it has been scaffolded (see `web/` after Week 2 of development):
-
 ```bash
 cd web
 npm install
-npm run dev  # http://localhost:5173
+npm run dev  # http://localhost:5173, all 7 pages
 ```
+
+If the API isn't running (or isn't reachable), the web app falls back to a static JSON
+mirror of the data (`web/public/static-data/`, generated by `make export`), so the map
+and district pages still work fully offline.
 
 ### Or run everything with Docker
 
@@ -140,11 +151,13 @@ npm run dev  # http://localhost:5173
 docker compose up --build
 ```
 
-This starts the API and web app together, reading from `data/public/`.
+This starts the API and web app together, reading from `data/public/`. `infra/` has the
+production Dockerfiles used for deployment; see `docs/DEPLOY.md` for deploying both
+services to Render via the `render.yaml` Blueprint at the repo root.
 
 ## Methodology and validation
 
-Every population-level estimate uses the SAS survey weights and design (strata and primary sampling units), never a simple average. Model outputs are always shown as associations or predictions, never as causal claims. The driver model is validated with district-grouped cross-validation; the seasonal nowcast is validated with a leave-one-year-out backtest against two naive baselines. A live, in-app methodology page is planned but not yet built; the full methodology, decisions, and known limitations are documented in `docs/` (`docs/decisions.md`, `docs/survey-design.md`, `docs/validation.md`, `docs/nowcast-feature-timing.md`).
+Every population-level estimate uses the SAS survey weights and design (strata and primary sampling units), never a simple average. Model outputs are always shown as associations or predictions, never as causal claims. The driver model is validated with district-grouped cross-validation; the seasonal nowcast is validated with a leave-one-year-out backtest against two naive baselines. The in-app methodology page (`/methodology`) and data page (`/data`) surface this directly; the full detail, decisions, and known limitations are documented in `docs/` (`docs/decisions.md`, `docs/survey-design.md`, `docs/validation.md`, `docs/nowcast-feature-timing.md`, `docs/models/`).
 
 ### Validation results
 
