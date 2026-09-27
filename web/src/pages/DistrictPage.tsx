@@ -333,7 +333,7 @@ export default function DistrictPage() {
             target="_blank"
             rel="noreferrer"
           >
-            {t('district.downloadBrief')} ↓
+            {t('district.downloadBrief')}
           </a>
         </div>
       )}

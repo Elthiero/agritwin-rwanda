@@ -40,7 +40,7 @@ export default function DataPage() {
           <ul>
             {SATELLITE_SOURCES.map((s) => (
               <li key={s.name}>
-                {s.name} — {t(`data.satelliteUse.${s.use}`)}
+                {s.name}, {t(`data.satelliteUse.${s.use}`)}
               </li>
             ))}
           </ul>
@@ -57,7 +57,7 @@ export default function DataPage() {
               <dd>{meta.data.crops.map((c) => t(`crop.${c}`)).join(', ')}</dd>
               <dt>{t('data.years')}</dt>
               <dd>
-                {Math.min(...meta.data.years)}–{Math.max(...meta.data.years)}
+                {Math.min(...meta.data.years)} to {Math.max(...meta.data.years)}
               </dd>
               <dt>{t('data.districtCount')}</dt>
               <dd>{meta.data.districts.length}</dd>

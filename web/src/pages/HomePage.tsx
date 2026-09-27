@@ -32,7 +32,7 @@ export default function HomePage() {
           <div className="home-hero-text">
             <h2>{t('home.hero')}</h2>
             <Link className="home-hero-cta" to="/map">
-              {t('home.ctaButton')} →
+              {t('home.ctaButton')}
             </Link>
           </div>
           <div className="home-hero-art" aria-hidden="true">
@@ -54,7 +54,7 @@ export default function HomePage() {
             <span>{t('data.crops')}</span>
           </div>
           <div>
-            <strong>2019–2025</strong>
+            <strong>2019 to 2025</strong>
             <span>{t('data.years')}</span>
           </div>
         </section>
@@ -83,7 +83,7 @@ export default function HomePage() {
           <h3>{t('home.ctaTitle')}</h3>
           <p>{t('home.ctaBody')}</p>
           <Link className="home-cta-button" to="/map">
-            {t('home.ctaButton')} →
+            {t('home.ctaButton')}
           </Link>
         </section>
 

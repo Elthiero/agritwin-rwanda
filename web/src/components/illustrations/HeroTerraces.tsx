@@ -2,7 +2,7 @@
  * The hero illustration is the product's own chart, drawn as landscape: Rwanda's
  * terraced hillsides standing in for the yield-gap curve (attainable above,
  * actual below, the gap between them), in the same viridis ramp the map legend
- * uses. Not decoration — the metaphor is the content.
+ * uses. Not decoration: the metaphor is the content.
  */
 const POINTS_X = [40, 190, 340, 490, 600]
 const ATTAINABLE_Y = [92, 72, 86, 60, 78]

@@ -94,7 +94,7 @@
     "interval": "Intervalle",
     "intervalRange": "{{low}} à {{high}}",
     "actualOnceSurveyed": "Réel (une fois enquêté)",
-    "modelUsedNote": "Modèle utilisé : {{model}}, choisi car il avait l'erreur la plus faible en test pour cette culture et ce délai — souvent la simple moyenne du district, pas un modèle plus sophistiqué. Voir la page méthodologie pour la comparaison complète.",
+    "modelUsedNote": "Modèle utilisé : {{model}}, choisi car il avait l'erreur la plus faible en test pour cette culture et ce délai. Souvent la simple moyenne du district, pas un modèle plus sophistiqué. Voir la page méthodologie pour la comparaison complète.",
     "scenarioTitle": "Explorateur de scénarios",
     "scenarioCaption": "Estimation basée sur un modèle du rendement moyen selon une combinaison hypothétique de pratiques, pas une simulation d'une intervention réelle.",
     "scenarioLoading": "Chargement…",

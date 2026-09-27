@@ -94,7 +94,7 @@
     "interval": "Igipimo",
     "intervalRange": "{{low}} kugeza {{high}}",
     "actualOnceSurveyed": "Nyawo (nyuma yo gukorwaho ubushakashatsi)",
-    "modelUsedNote": "Moderi yakoreshejwe: {{model}}, yatoranyijwe kuko yari ifite ikosa rito kuri iki gihingwa n'iki gihe — akenshi ni impuzandengo y'akarere, ntabwo ari moderi igoye. Reba urupapuro rw'uburyo bwakoreshejwe kugira ngo ubone igereranya ryuzuye.",
+    "modelUsedNote": "Moderi yakoreshejwe: {{model}}, yatoranyijwe kuko yari ifite ikosa rito kuri iki gihingwa n'iki gihe. Akenshi ni impuzandengo y'akarere, ntabwo ari moderi igoye. Reba urupapuro rw'uburyo bwakoreshejwe kugira ngo ubone igereranya ryuzuye.",
     "scenarioTitle": "Igenzura ry'ibishoboka",
     "scenarioCaption": "Igereranyo rishingiye kuri moderi ry'umusaruro impuzandengo mu gihe hifashishijwe ingamba runaka, si igerageza ry'ikintu nyacyo.",
     "scenarioLoading": "Gutegura…",
