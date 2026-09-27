@@ -18,7 +18,7 @@ export default function HomePage() {
       </header>
       <SiteNav />
 
-      <div className="page-content home-content">
+      <div className="page-content narrow home-content">
         <section className="hero-section">
           <h2>{t('home.problemTitle')}</h2>
           <p>{t('home.problemBody')}</p>

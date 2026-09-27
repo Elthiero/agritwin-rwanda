@@ -17,7 +17,7 @@ export default function AboutPage() {
       </header>
       <SiteNav />
 
-      <div className="page-content">
+      <div className="page-content narrow">
         <h2>{t('about.projectTitle')}</h2>
         <p>{t('about.projectBody1')}</p>
         <p>{t('about.projectBody2')}</p>

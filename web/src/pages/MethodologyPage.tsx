@@ -17,7 +17,7 @@ export default function MethodologyPage() {
       </header>
       <SiteNav />
 
-      <div className="page-content">
+      <div className="page-content narrow">
         <h2>{t('methodology.yieldTitle')}</h2>
         <p>{t('methodology.yieldBody')}</p>
 

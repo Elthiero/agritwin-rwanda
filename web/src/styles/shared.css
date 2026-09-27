@@ -58,6 +58,10 @@
 .page-content {
   padding: var(--space-4) var(--space-5) var(--space-6);
   flex: 1;
+  max-width: 100%;
+}
+
+.page-content.narrow {
   max-width: 72ch;
 }
 
