@@ -39,6 +39,39 @@ AgriTwin combines NISR's Seasonal Agricultural Survey microdata with satellite a
 
 Every number shown in the app carries a confidence interval or an explicit reliability flag. Nothing below district level is ever shown, and no individual farmer or plot data leaves the pipeline. The web app has all 7 planned pages (map, district detail, early estimate, scenario explorer, methodology, data, about), works fully offline against a static JSON mirror of the API when no backend is reachable, and is available in English, French, and Kinyarwanda (Kinyarwanda is an AI-authored first draft pending native-speaker review).
 
+## Screenshots
+
+### Home page
+The landing page introduces the three engines and invites users to explore the map.
+
+![Home hero section](screenshots/web/01-home-hero.png)
+
+![Home features](screenshots/web/04-home-features.png)
+
+### Map: yield gap by district
+Select crop and season to see district-level yield gaps across Rwanda. Click any district for detail.
+
+![Map overview](screenshots/web/02-map-overview.png)
+
+Mobile-responsive design for field use:
+
+![Map on mobile](screenshots/web/03-map-mobile.png)
+
+### Early estimate (nowcast)
+Honest backtest of satellite-based yield predictions before the official SAS results are published.
+
+![Early estimate page](screenshots/web/05-early-estimate.png)
+
+### Scenario explorer
+Model-based what-if scenarios: "what if seed adoption reached 50%?"
+
+![Scenario explorer](screenshots/web/06-scenario-explorer.png)
+
+### Methodology and About
+Full transparency on how every number is computed.
+
+![Methodology](screenshots/web/07-methodology.png)
+
 ### What is built
 
 - **Data pipeline**: harmonize (7 SAS years) → clean → survey (design-based district estimates) → gee (satellite/climate features) → models (attainable yield, drivers, nowcast, scenario) → export (public CSVs, simplified GeoJSON, PDF district briefs). Runs end to end on real data via `make all`.
