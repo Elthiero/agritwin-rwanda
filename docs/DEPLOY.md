@@ -1,5 +1,13 @@
 # Deploying to Render
 
+**Live since 2026-09-27:** [web](https://agritwin-rwanda-web.onrender.com) ·
+[API](https://agritwin-rwanda-api.onrender.com) ·
+[API docs](https://agritwin-rwanda-api.onrender.com/docs). Both were smoke-tested
+against the real deployed URLs, not just locally: `/health`, a real data endpoint,
+the compiled web bundle grepped to confirm it points at the live API (not the offline
+fallback), and a live CORS check. The steps below are kept as the reference for
+redeploying, adding a service, or setting this up again from scratch.
+
 Two Docker web services: `agritwin-rwanda-api` (FastAPI, `infra/Dockerfile.api`) and
 `agritwin-rwanda-web` (static React build served by nginx, `infra/Dockerfile.web`).
 Both Dockerfiles and the `render.yaml` Blueprint at the repo root have been built and

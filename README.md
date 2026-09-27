@@ -4,10 +4,10 @@
 
 Built for the [NISR 2026 Big Data Hackathon](https://statistics.gov.rw/about/hackathon/2026-hackathon-competition), Track 1 (Agricultural Productivity).
 
-- Live app: `<deployed web URL>` (not yet deployed, see `docs/DEPLOY.md`)
-- API docs: `<deployed API URL>/docs` (not yet deployed)
-- Demo video: `<YouTube unlisted link>`
-- Documentation site: `<MkDocs GitHub Pages URL>`
+- Live app: [agritwin-rwanda-web.onrender.com](https://agritwin-rwanda-web.onrender.com)
+- API docs: [agritwin-rwanda-api.onrender.com/docs](https://agritwin-rwanda-api.onrender.com/docs)
+- Demo video: `<YouTube unlisted link>` (not yet recorded)
+- Documentation site: `<MkDocs GitHub Pages URL>` (not yet deployed)
 - Current build status and known gaps: [`docs/STATUS.md`](docs/STATUS.md)
 
 ---
@@ -78,7 +78,7 @@ Full transparency on how every number is computed.
 - **API**: all 11 planned endpoints (`/meta`, `/kpis`, `/districts`, `/districts/{code}/profile`, `/yield-gap`, `/drivers`, `/backtest`, `/scenario/{code}`, `/nowcast`, `/nowcast/{code}/curve`, `/briefs/{code}.pdf`), serving precomputed data from `data/public/`.
 - **Web app**: all 7 pages (map, district detail, early estimate, scenario explorer, methodology, data, about), in English, French, and Kinyarwanda, with an offline static-data fallback when the API is unreachable.
 - **Model cards** for all 4 trained models are in `docs/models/`.
-- **Deployment**: Docker images and a Render Blueprint (`render.yaml`) are built and locally smoke-tested; the actual Render account connection is the one step left (`docs/DEPLOY.md`).
+- **Deployment**: live on Render (`render.yaml` Blueprint, both services deployed 2026-09-27): [web](https://agritwin-rwanda-web.onrender.com) and [API](https://agritwin-rwanda-api.onrender.com). CORS and the built-in `VITE_API_BASE` were verified against the real deployed API, not just locally (`docs/DEPLOY.md`). An alternative Netlify path for the web app alone is also documented (`netlify.toml`, `docs/DEPLOY.md`).
 
 ## Tech stack
 
