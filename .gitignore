@@ -42,3 +42,7 @@ web/dist/
 .DS_Store
 site/
 mlruns/
+
+# presentation & sales materials (not committed)
+docs/PITCH.md
+screenshots/

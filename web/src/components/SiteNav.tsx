@@ -2,7 +2,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 const LINKS: { to: string; key: string }[] = [
-  { to: '/', key: 'nav.map' },
+  { to: '/', key: 'nav.home' },
+  { to: '/map', key: 'nav.map' },
   { to: '/early-estimate', key: 'nav.earlyEstimate' },
   { to: '/scenario', key: 'nav.scenario' },
   { to: '/methodology', key: 'nav.methodology' },

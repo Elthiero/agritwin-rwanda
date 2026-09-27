@@ -7,6 +7,28 @@
     "backToMap": "← Back to map",
     "language": "Language"
   },
+  "home": {
+    "hero": "Close the yield gap: see how far below potential every district is, what drives the gap, and what this season will harvest.",
+    "problemTitle": "The challenge",
+    "problemBody": "Rwanda's Seasonal Agricultural Survey measures yield every season, but results come out after the harvest is over. By then, a crop has already lost ground to avoidable gaps: better seed, water, soil care, and know-how could bridge them. Without timely insight into what's driving those gaps, and how the current season is likely to perform, policy makers and extension agents cannot target resources where they will help most.",
+    "solutionTitle": "Four tools in one place",
+    "feature1Title": "Yield gap map",
+    "feature1Body": "Every district, every crop, every season: see how much below attainable yield the current harvest fell short, and how much room exists to close that gap.",
+    "feature2Title": "Driver insights",
+    "feature2Body": "Machine learning model trained on real farming data shows which practices and conditions are associated with closing the yield gap: seed variety, fertilizer, irrigation, and more.",
+    "feature3Title": "Early estimate",
+    "feature3Body": "Before the season survey is published, satellite greenness and rainfall data predict this season's yield so early interventions can be timed.",
+    "feature4Title": "Scenario explorer",
+    "feature4Body": "What if seed adoption rose to 50%? Run model-based scenarios to explore how different combinations of practices could move yields.",
+    "ctaTitle": "Start exploring",
+    "ctaBody": "Click the map, pick a crop and season, and drill into any district to see all four views.",
+    "ctaButton": "Open the map",
+    "whyTitle": "Why this works",
+    "why1": "Built on official NISR Seasonal Agricultural Survey data (2019 to 2025), not guesses or estimates",
+    "why2": "Machine learning explained with SHAP so you know which factors the model actually learned, not black boxes",
+    "why3": "Honest about uncertainty: every number carries a confidence interval and reliability flag",
+    "why4": "Model-based scenarios clearly labelled as associations, never causal claims or guarantees"
+  },
   "controls": {
     "crop": "Crop",
     "season": "Season",
@@ -87,6 +109,7 @@
   },
   "nav": {
     "label": "Site sections",
+    "home": "Home",
     "map": "Map",
     "earlyEstimate": "Early estimate",
     "scenario": "Scenario explorer",
