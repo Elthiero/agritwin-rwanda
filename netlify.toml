@@ -1,0 +1,18 @@
+# Netlify config for the web app only. The API (FastAPI) does not run on Netlify;
+# deploy it separately (see docs/DEPLOY.md for Render). Without VITE_API_BASE set,
+# the web app falls back to the bundled offline snapshot in web/public/static-data
+# (see web/src/api/client.ts), so it still works standalone.
+[build]
+  base = "web"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# React Router client-side routing: any path Netlify doesn't recognize as a real
+# static file (e.g. /districts/12) falls back to index.html, not Netlify's 404 page.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

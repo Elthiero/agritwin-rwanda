@@ -90,3 +90,36 @@ deployed URL after each deploy"), not just this first one:
 Render keeps every previous deploy. If a deploy breaks something, use the dashboard's
 "Rollback to this deploy" on the last known-good build rather than reverting git commits
 under pressure.
+
+## Alternative: web app on Netlify
+
+Netlify hosts static sites and can't run the FastAPI container, so this is for the
+**web app only**; the API still needs Render (or another Docker/Python host) if you
+want live data. Without an API, the web app automatically falls back to the offline
+snapshot bundled in `web/public/static-data/` (see `web/src/api/client.ts`), so a
+Netlify-only deploy still works, just serving whatever data was captured at the last
+`make export` rather than live numbers.
+
+`netlify.toml` at the repo root is already configured: build base `web`, command
+`npm run build`, publish directory `dist`, and a SPA redirect so client-side routes
+like `/districts/12` don't 404 on refresh.
+
+1. Push this repo to GitHub if you haven't (see above).
+2. Go to [app.netlify.com](https://app.netlify.com) and sign in (or create an account).
+3. **Add new site** → **Import an existing project** → connect GitHub → select the
+   `agritwin-rwanda` repo. Netlify reads `netlify.toml` automatically and pre-fills the
+   build settings; you shouldn't need to touch them.
+4. Optional, only if you want live data instead of the offline snapshot: **Site
+   configuration → Environment variables** → add `VITE_API_BASE` set to your deployed
+   API's URL plus `/api/v1` (e.g. `https://agritwin-rwanda-api.onrender.com/api/v1`).
+   This is baked in at build time, so add it *before* the first deploy, or trigger
+   **Deploys → Trigger deploy → Clear cache and deploy site** afterward if you add it
+   later.
+5. Click **Deploy**. First build takes a minute or two.
+6. If you set `VITE_API_BASE`, go back to Render → the API service → **Environment**
+   and add the Netlify URL (e.g. `https://agritwin-rwanda.netlify.app`) to
+   `ALLOWED_ORIGINS`, or the browser console will show CORS errors. This is read at
+   runtime, so no API rebuild needed.
+
+Smoke-test the same way as the Render web service (map loads with real district
+colors, district click populates the panel, language switcher works).
