@@ -318,19 +318,23 @@ export default function DistrictPage() {
               </ul>
             )}
           </section>
+        </div>
+      )}
 
-          <section className="card">
+      {profile.data && (
+        <div className="brief-banner">
+          <div>
             <h2>{t('district.briefTitle')}</h2>
-            <p className="card-caption">{t('district.briefCaption')}</p>
-            <a
-              className="brief-link"
-              href={`${API_BASE}/briefs/${districtCode}.pdf`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {t('district.downloadBrief')}
-            </a>
-          </section>
+            <p>{t('district.briefCaption')}</p>
+          </div>
+          <a
+            className="brief-link"
+            href={`${API_BASE}/briefs/${districtCode}.pdf`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t('district.downloadBrief')} ↓
+          </a>
         </div>
       )}
 

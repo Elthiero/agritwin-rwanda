@@ -50,9 +50,9 @@
 .page-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  align-items: start;
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5) var(--space-6);
-  flex: 1;
 }
 
 .page-content {
