@@ -1,0 +1,80 @@
+/* About: narrative column plus a facts rail (team, AI disclosure, source) —
+   those are reference facts, not prose, so they read better as a sidebar than
+   as three more paragraphs in the main column. */
+
+.about-layout {
+  display: grid;
+  grid-template-columns: 1fr minmax(260px, 320px);
+  gap: var(--space-7);
+  padding: var(--space-5) var(--space-5) var(--space-7);
+}
+
+.about-main {
+  max-width: 62ch;
+}
+
+.about-main h2 {
+  font-size: 1.15rem;
+  margin-bottom: var(--space-3);
+}
+
+.about-main p {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  margin-bottom: var(--space-4);
+}
+
+.about-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  border-left: 1px solid var(--terrace-line);
+  padding-left: var(--space-5);
+}
+
+.about-rail-block h3 {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--forest-dark);
+  margin-bottom: var(--space-2);
+}
+
+.about-rail-block p {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.about-quote {
+  border-left: 2px solid var(--harvest);
+  padding-left: var(--space-4);
+}
+
+.about-quote p {
+  font-size: 0.9rem;
+  color: var(--ink);
+  line-height: 1.6;
+  font-style: normal;
+}
+
+.about-quote cite {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: 0.75rem;
+  color: var(--terrace);
+  font-style: normal;
+}
+
+@media (max-width: 760px) {
+  .about-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .about-rail {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--terrace-line);
+    padding-top: var(--space-5);
+  }
+}

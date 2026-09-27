@@ -74,7 +74,7 @@ const SCREENSHOTS = [
     url: '/about',
     description: 'About page',
     viewport: { width: 1920, height: 1080 },
-    waitFor: '.page-content',
+    waitFor: '.about-layout',
     delay: 1000,
   },
 ];

@@ -1,0 +1,111 @@
+/* Methodology: a sticky in-page index next to the content, because the seven
+   sections here are a real, named structure (a reader jumps to one), not a
+   decorative table of contents. */
+
+.methodology-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  padding: var(--space-5);
+  background: var(--harvest-soft);
+  border-bottom: 1px solid var(--terrace-line);
+}
+
+.methodology-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 22ch;
+}
+
+.methodology-stats strong {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  color: var(--forest-dark);
+}
+
+.methodology-stats span {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.methodology-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: var(--space-6);
+  flex: 1;
+  padding: var(--space-5);
+}
+
+.methodology-index {
+  align-self: start;
+  position: sticky;
+  top: var(--space-5);
+}
+
+.methodology-index ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--terrace-line);
+}
+
+.methodology-index a {
+  display: block;
+  padding: var(--space-2) 0 var(--space-2) var(--space-3);
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.methodology-index a:hover,
+.methodology-index a:focus-visible {
+  color: var(--forest-dark);
+  border-left-color: var(--harvest);
+}
+
+.methodology-content.page-content {
+  padding: 0;
+  max-width: 68ch;
+}
+
+.methodology-content section {
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--terrace-line);
+}
+
+.methodology-content section:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+@media (max-width: 760px) {
+  .methodology-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .methodology-index {
+    position: static;
+  }
+
+  .methodology-index ul {
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-left: none;
+    border-bottom: 1px solid var(--terrace-line);
+    gap: 0 var(--space-4);
+    padding-bottom: var(--space-3);
+  }
+
+  .methodology-index a {
+    padding: var(--space-1) 0;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+  }
+
+  .methodology-index a:hover,
+  .methodology-index a:focus-visible {
+    border-bottom-color: var(--harvest);
+  }
+}

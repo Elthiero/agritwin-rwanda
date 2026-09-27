@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import SiteNav from '../components/SiteNav'
 import '../styles/shared.css'
+import '../styles/about.css'
 
 export default function AboutPage() {
   const { t } = useTranslation()
@@ -17,19 +18,29 @@ export default function AboutPage() {
       </header>
       <SiteNav />
 
-      <div className="page-content narrow">
-        <h2>{t('about.projectTitle')}</h2>
-        <p>{t('about.projectBody1')}</p>
-        <p>{t('about.projectBody2')}</p>
+      <div className="about-layout">
+        <div className="about-main">
+          <h2>{t('about.projectTitle')}</h2>
+          <p>{t('about.projectBody1')}</p>
+          <p>{t('about.projectBody2')}</p>
+        </div>
 
-        <h2>{t('about.teamTitle')}</h2>
-        <p>{t('about.teamBody')}</p>
+        <aside className="about-rail">
+          <div className="about-rail-block">
+            <h3>{t('about.teamTitle')}</h3>
+            <p>{t('about.teamBody')}</p>
+          </div>
 
-        <h2>{t('about.aiTitle')}</h2>
-        <p>{t('about.aiBody')}</p>
+          <blockquote className="about-quote">
+            <p>{t('about.aiBody')}</p>
+            <cite>{t('about.aiTitle')}</cite>
+          </blockquote>
 
-        <h2>{t('about.contactTitle')}</h2>
-        <p>{t('about.contactBody')}</p>
+          <div className="about-rail-block">
+            <h3>{t('about.contactTitle')}</h3>
+            <p>{t('about.contactBody')}</p>
+          </div>
+        </aside>
       </div>
 
       <footer className="footer-strip">{t('app.footer')}</footer>

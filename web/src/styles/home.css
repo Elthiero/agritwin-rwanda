@@ -1,0 +1,261 @@
+/* Home page: the hero illustration is the product's own yield-gap chart drawn as
+   terraced hillsides (see HeroTerraces.tsx), so this stylesheet is built around
+   giving that one gesture room, then staying quiet everywhere else. */
+
+.home-hero {
+  display: grid;
+  grid-template-columns: minmax(280px, 460px) 1fr;
+  gap: var(--space-6);
+  align-items: center;
+  padding: var(--space-7) var(--space-5) var(--space-6);
+}
+
+.home-hero-text h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.9rem, 3.2vw + 1rem, 3.1rem);
+  line-height: 1.08;
+  color: var(--forest-dark);
+  letter-spacing: -0.01em;
+}
+
+.home-hero-cta {
+  display: inline-block;
+  margin-top: var(--space-5);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--forest-dark);
+  border-bottom: 2px solid var(--harvest);
+  padding-bottom: 2px;
+}
+
+.home-hero-cta:hover {
+  color: var(--forest);
+}
+
+.home-hero-art {
+  position: relative;
+}
+
+.hero-art {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.home-hero-art-caption {
+  margin-top: var(--space-2);
+  font-size: 0.78rem;
+  color: var(--terrace);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 2px;
+  vertical-align: middle;
+}
+
+.dot-gold {
+  background: var(--harvest);
+}
+
+.dot-forest {
+  background: var(--forest-dark);
+}
+
+.home-proof-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  padding: var(--space-5);
+  margin: 0 var(--space-5);
+  border-top: 1px solid var(--terrace-line);
+  border-bottom: 1px solid var(--terrace-line);
+}
+
+.home-proof-strip div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-proof-strip strong {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--forest-dark);
+}
+
+.home-proof-strip span {
+  font-size: 0.8rem;
+  color: var(--terrace);
+}
+
+.home-tools {
+  padding: var(--space-7) var(--space-5) var(--space-6);
+}
+
+.home-tools h3,
+.home-challenge h3,
+.home-cta h3,
+.home-why h3 {
+  font-size: 1.15rem;
+  margin-bottom: var(--space-4);
+}
+
+.home-tools-list {
+  list-style: none;
+}
+
+.home-tools-list li {
+  display: flex;
+  gap: var(--space-5);
+  align-items: flex-start;
+  padding: var(--space-5) 0;
+  border-top: 1px solid var(--terrace-line);
+}
+
+.home-tools-list li:last-child {
+  border-bottom: 1px solid var(--terrace-line);
+}
+
+.tool-icon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  color: var(--forest);
+  margin-top: 2px;
+}
+
+.home-tools-list h4 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--forest-dark);
+  margin-bottom: var(--space-1);
+}
+
+.home-tools-list p {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  max-width: 60ch;
+}
+
+.home-challenge {
+  padding: var(--space-6) var(--space-5);
+}
+
+.home-challenge p {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  max-width: 68ch;
+}
+
+.home-cta {
+  background: var(--forest-dark);
+  background-image: repeating-linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.035) 0,
+    rgba(255, 255, 255, 0.035) 1px,
+    transparent 1px,
+    transparent 64px
+  );
+  padding: var(--space-7) var(--space-5);
+}
+
+.home-cta h3 {
+  color: var(--paper-raised);
+  font-size: 1.4rem;
+}
+
+.home-cta p {
+  color: #cdd8cf;
+  font-size: 0.95rem;
+  max-width: 56ch;
+  margin-bottom: var(--space-5);
+}
+
+.home-cta-button {
+  display: inline-block;
+  background: var(--harvest-soft);
+  color: var(--forest-dark);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.home-cta-button:hover {
+  background: var(--paper-raised);
+}
+
+.home-why {
+  padding: var(--space-6) var(--space-5) var(--space-7);
+}
+
+.home-why ul {
+  list-style: none;
+  max-width: 68ch;
+}
+
+.home-why li {
+  position: relative;
+  padding: var(--space-3) 0 var(--space-3) var(--space-5);
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--terrace-line);
+}
+
+.home-why li:last-child {
+  border-bottom: 1px solid var(--terrace-line);
+}
+
+.home-why li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: calc(var(--space-3) + 0.55em);
+  width: 10px;
+  height: 2px;
+  background: var(--harvest);
+}
+
+@media (max-width: 860px) {
+  .home-hero {
+    grid-template-columns: 1fr;
+    padding-top: var(--space-6);
+  }
+
+  .home-hero-art {
+    order: -1;
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-hero,
+  .home-tools,
+  .home-challenge,
+  .home-cta,
+  .home-why {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  .home-proof-strip {
+    margin-left: var(--space-4);
+    margin-right: var(--space-4);
+    gap: var(--space-4);
+  }
+
+  .home-tools-list li {
+    gap: var(--space-3);
+  }
+}

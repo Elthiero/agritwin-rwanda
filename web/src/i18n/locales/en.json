@@ -159,6 +159,13 @@
   "methodology": {
     "title": "Methodology",
     "tagline": "How every number on this site is computed, in plain language, with the honest limitations included.",
+    "indexLabel": "Jump to a section",
+    "statGapValue": "7.7%",
+    "statGapLabel": "off the official maize yield figure, Season B 2025",
+    "statDriverValue": "+22.2%",
+    "statDriverLabel": "best driver model's gain over a naive baseline (Irish potato)",
+    "statNowcastValue": "28.4%",
+    "statNowcastLabel": "MAPE of the best nowcast baseline, 2 months into the season",
     "yieldTitle": "Yield and the yield gap",
     "yieldBody": "Yield (kg per hectare) is computed only from pure-stand plots (one main crop on the plot) farmed by small-scale farmers, using each plot's harvested weight divided by its area, and combined into a district figure with the Seasonal Agricultural Survey's own sampling weights, strata and clusters. The yield gap is the modeled attainable yield minus this actual yield, shown in kg/ha and as a percent of attainable.",
     "attainableTitle": "Attainable yield",
