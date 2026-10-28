@@ -7,7 +7,6 @@ Built for the [NISR 2026 Big Data Hackathon](https://statistics.gov.rw/about/hac
 - Live app: [agritwin-rwanda-web.onrender.com](https://agritwin-rwanda-web.onrender.com)
 - API docs: [agritwin-rwanda-api.onrender.com/docs](https://agritwin-rwanda-api.onrender.com/docs)
 - Demo video: [`demo-video/agritwin-rwanda.mp4`](demo-video/agritwin-rwanda.mp4)
-- Documentation site: `<MkDocs GitHub Pages URL>` (not yet deployed)
 - Current build status and known gaps: [`docs/STATUS.md`](docs/STATUS.md)
 
 ---

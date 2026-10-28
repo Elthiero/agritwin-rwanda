@@ -2,6 +2,10 @@
 
 Updated 2026-09-27 (live deployment). The Summary paragraph below is dated 2026-09-25 and left as written; only the deployment status has changed since, noted inline and in the "Recommended next tasks" table below rather than rewritten into the older prose.
 
+## 2026-10-28 update
+
+Demo video recorded and committed at `demo-video/agritwin-rwanda.mp4`, linked from the README.
+
 ## 2026-09-27 update
 
 Both services are live on Render: [agritwin-rwanda-web.onrender.com](https://agritwin-rwanda-web.onrender.com) and [agritwin-rwanda-api.onrender.com](https://agritwin-rwanda-api.onrender.com). Verified against the real deployed URLs (not just locally): `/health`, `/api/v1/meta`, the compiled web bundle actually pointing at the live API (not the offline fallback), and a real CORS check confirming the API's `access-control-allow-origin` matches the deployed web origin exactly. Also this session: a full `/frontend-design` pass on Home/About/Methodology (a bespoke SVG hero where terraced hillsides literally are the yield-gap chart, a sticky section index on Methodology, a facts rail on About), a fix for card-grid layouts stretching short cards to match a tall sibling (Data, District, Scenario, Early Estimate pages), and a Netlify deploy path added for the web app alone (`netlify.toml`) alongside the existing Render path. `README.md` and this file updated to match; see `docs/ai-usage-log.md` for the full entry.
